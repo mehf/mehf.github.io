@@ -40,6 +40,14 @@
   header {
     padding: 72px 0 40px;
   }
+  .avatar {
+    width: 96px; height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    margin-bottom: 24px;
+    display: block;
+  }
   .hero-img {
     width: 100%;
     border-radius: 14px;
@@ -70,14 +78,6 @@
   @media (max-width: 480px) {
     .gallery { grid-template-columns: 1fr; }
   }
-  .avatar {
-    width: 84px; height: 84px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), #a67cff);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; font-weight: 700; color: #fff;
-    margin-bottom: 24px;
-  }
   h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
   .tagline { color: var(--muted); font-size: 1.05rem; }
   .location { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
@@ -97,6 +97,22 @@
     font-size: 0.9rem;
     color: var(--text);
   }
+  .projects { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  @media (max-width: 480px) { .projects { grid-template-columns: 1fr; } }
+  .project {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .project:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .project h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+  .project p { color: var(--muted); font-size: 0.92rem; margin-bottom: 14px; }
+  .project .tags { display: flex; flex-wrap: wrap; gap: 8px; }
   .links { display: flex; flex-wrap: wrap; gap: 14px; }
   .links a {
     display: inline-flex; align-items: center; gap: 8px;
@@ -123,7 +139,7 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="avatar">MF</div>
+      <img class="avatar" src="assets/profile.png" alt="Morten Frandsen">
       <h1>Morten Frandsen</h1>
       <div class="tagline">Software Engineer</div>
       <div class="location">Copenhagen roots · based in Hong Kong</div>
@@ -143,6 +159,29 @@
         of AI and large language models, and experimenting with how these tools can
         fit into everyday engineering work.
       </p>
+    </section>
+
+    <section>
+      <h2>Projects</h2>
+      <div class="projects">
+        <a class="project" href="https://github.com/mehf/Chrome-Salesforce-inspector" target="_blank" rel="noopener">
+          <h3>Chrome Salesforce Inspector</h3>
+          <p>A Chrome extension that overlays a metadata layout on the standard Salesforce UI to improve the productivity and joy of Salesforce configuration, development, and integration.</p>
+          <span class="tags">
+            <span class="chip">JavaScript</span>
+            <span class="chip">Salesforce</span>
+            <span class="chip">Chrome Extension</span>
+          </span>
+        </a>
+        <a class="project" href="https://github.com/mehf/mehf.github.io" target="_blank" rel="noopener">
+          <h3>This Portfolio Site</h3>
+          <p>A clean, single-page personal portfolio built with plain HTML &amp; CSS and hosted on GitHub Pages.</p>
+          <span class="tags">
+            <span class="chip">HTML</span>
+            <span class="chip">CSS</span>
+          </span>
+        </a>
+      </div>
     </section>
 
     <section>
