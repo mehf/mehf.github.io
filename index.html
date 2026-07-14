@@ -1,12 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dev Portfolio | Software Engineer</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morten Frandsen</title>
+<meta name="description" content="Morten Frandsen — Software Engineer based in Hong Kong.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171a23;
+    --text: #e8eaf0;
+    --muted: #9aa1b3;
+    --accent: #6ea8fe;
+    --border: #262a36;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfd;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --muted: #5c6270;
+      --accent: #2b6ef2;
+      --border: #e6e8ee;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+  header {
+    padding: 96px 0 48px;
+  }
+  .avatar {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #a67cff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 700; color: #fff;
+    margin-bottom: 24px;
+  }
+  h1 { font-size: 2.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .tagline { color: var(--muted); font-size: 1.05rem; }
+  .location { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+  section { padding: 32px 0; border-top: 1px solid var(--border); }
+  h2 {
+    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin-bottom: 16px;
+  }
+  p { margin-bottom: 14px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+  .interests { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  .links { display: flex; flex-wrap: wrap; gap: 14px; }
+  .links a {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text);
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .links a:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .links svg { width: 18px; height: 18px; fill: currentColor; }
+  footer {
+    padding: 40px 0 64px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+  }
+</style>
 </head>
 <body>
-    hi
+  <div class="wrap">
+    <header>
+      <div class="avatar">MF</div>
+      <h1>Morten Frandsen</h1>
+      <div class="tagline">Software Engineer</div>
+      <div class="location">Copenhagen roots · based in Hong Kong</div>
+    </header>
+
+    <section>
+      <h2>About</h2>
+      <p>
+        I'm a software engineer from Denmark, now living and working in Hong Kong.
+        I like building things that are simple, useful, and well-made — from
+        production systems to quick prototypes that test an idea.
+      </p>
+      <p>
+        Lately I've been spending a lot of my time following the fast-moving world
+        of AI and large language models, and experimenting with how these tools can
+        fit into everyday engineering work.
+      </p>
+    </section>
+
+    <section>
+      <h2>Interests</h2>
+      <div class="interests">
+        <span class="chip">Software Engineering</span>
+        <span class="chip">AI &amp; LLMs</span>
+        <span class="chip">Prototyping</span>
+        <span class="chip">Web Development</span>
+        <span class="chip">Building tools</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Elsewhere</h2>
+      <div class="links">
+        <a href="https://github.com/mehf" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="year"></span> Morten Frandsen · Built with plain HTML &amp; CSS
+    </footer>
+  </div>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>
