@@ -151,6 +151,16 @@
   .novoice.show { display: block; }
   .word-row { display: flex; align-items: center; gap: 10px; justify-content: center; }
   label.autosay { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; color: var(--muted); cursor: pointer; }
+  .vcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+  .vcard h3 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .vcard .ven { color: var(--muted); font-weight: 400; font-size: 0.95rem; }
+  .vtable { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-top: 10px; }
+  .vtable th { text-align: left; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .vtable td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .vtable tr:last-child td { border-bottom: none; }
+  .vtable td.pers { color: var(--muted); white-space: nowrap; }
+  .vtable td span.frm { cursor: pointer; border-bottom: 1px dotted var(--border); }
+  .vtable td span.frm:hover { color: var(--accent); border-bottom-color: var(--accent); }
   footer { padding: 40px 0 64px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
 </style>
 </head>
@@ -172,6 +182,7 @@
         <button class="tab active" data-panel="flash">🃏 Flashcards</button>
         <button class="tab" data-panel="quiz">✅ Quiz</button>
         <button class="tab" data-panel="match">🧩 Matching</button>
+        <button class="tab" data-panel="verbs">🔤 Verbs</button>
         <button class="tab" data-panel="browse">📖 Browse all</button>
       </div>
 
@@ -226,6 +237,22 @@
         </div>
         <div class="match-grid" id="m-grid"></div>
         <div class="feedback" id="m-feedback"></div>
+      </div>
+
+      <!-- VERBS -->
+      <div class="panel" id="verbs">
+        <div class="tip"><b>Conjugation basics:</b> Lithuanian verbs change by person and tense. Persons: <b>aš</b> (I), <b>tu</b> (you), <b>jis/ji</b> (he/she), <b>mes</b> (we), <b>jūs</b> (you pl./formal), <b>jie/jos</b> (they m./f.). Handy pattern: the 3rd person is the same singular and plural, and the future is usually infinitive-stem + <b>-siu/-si/-s</b>.</div>
+        <input class="search" id="v-search" type="search" placeholder="Search verbs… e.g. eiti, to eat">
+        <div class="row" style="margin:0 0 14px;">
+          <select id="v-pick"></select>
+          <select id="v-tense">
+            <option value="all">All tenses</option>
+            <option value="pres">Present</option>
+            <option value="past">Past</option>
+            <option value="fut">Future</option>
+          </select>
+        </div>
+        <div id="v-list"></div>
       </div>
 
       <!-- BROWSE -->
@@ -619,6 +646,84 @@ function mPick(b) {
 $('m-new').addEventListener('click', mNew);
 $('m-cat').addEventListener('change', mNew);
 mNew();
+
+const CONJ = [
+  ["būti", "to be", ["esu", "esi", "yra", "esame", "esate", "yra"], ["buvau", "buvai", "buvo", "buvome", "buvote", "buvo"], ["būsiu", "būsi", "bus", "būsime", "būsite", "bus"]],
+  ["turėti", "to have", ["turiu", "turi", "turi", "turime", "turite", "turi"], ["turėjau", "turėjai", "turėjo", "turėjome", "turėjote", "turėjo"], ["turėsiu", "turėsi", "turės", "turėsime", "turėsite", "turės"]],
+  ["eiti", "to go (on foot)", ["einu", "eini", "eina", "einame", "einate", "eina"], ["ėjau", "ėjai", "ėjo", "ėjome", "ėjote", "ėjo"], ["eisiu", "eisi", "eis", "eisime", "eisite", "eis"]],
+  ["važiuoti", "to go (by vehicle)", ["važiuoju", "važiuoji", "važiuoja", "važiuojame", "važiuojate", "važiuoja"], ["važiavau", "važiavai", "važiavo", "važiavome", "važiavote", "važiavo"], ["važiuosiu", "važiuosi", "važiuos", "važiuosime", "važiuosite", "važiuos"]],
+  ["norėti", "to want", ["noriu", "nori", "nori", "norime", "norite", "nori"], ["norėjau", "norėjai", "norėjo", "norėjome", "norėjote", "norėjo"], ["norėsiu", "norėsi", "norės", "norėsime", "norėsite", "norės"]],
+  ["galėti", "to be able / can", ["galiu", "gali", "gali", "galime", "galite", "gali"], ["galėjau", "galėjai", "galėjo", "galėjome", "galėjote", "galėjo"], ["galėsiu", "galėsi", "galės", "galėsime", "galėsite", "galės"]],
+  ["daryti", "to do / to make", ["darau", "darai", "daro", "darome", "darote", "daro"], ["dariau", "darei", "darė", "darėme", "darėte", "darė"], ["darysiu", "darysi", "darys", "darysime", "darysite", "darys"]],
+  ["sakyti", "to say", ["sakau", "sakai", "sako", "sakome", "sakote", "sako"], ["sakiau", "sakei", "sakė", "sakėme", "sakėte", "sakė"], ["sakysiu", "sakysi", "sakys", "sakysime", "sakysite", "sakys"]],
+  ["kalbėti", "to speak", ["kalbu", "kalbi", "kalba", "kalbame", "kalbate", "kalba"], ["kalbėjau", "kalbėjai", "kalbėjo", "kalbėjome", "kalbėjote", "kalbėjo"], ["kalbėsiu", "kalbėsi", "kalbės", "kalbėsime", "kalbėsite", "kalbės"]],
+  ["valgyti", "to eat", ["valgau", "valgai", "valgo", "valgome", "valgote", "valgo"], ["valgiau", "valgei", "valgė", "valgėme", "valgėte", "valgė"], ["valgysiu", "valgysi", "valgys", "valgysime", "valgysite", "valgys"]],
+  ["gerti", "to drink", ["geriu", "geri", "geria", "geriame", "geriate", "geria"], ["gėriau", "gėrei", "gėrė", "gėrėme", "gėrėte", "gėrė"], ["gersiu", "gersi", "gers", "gersime", "gersite", "gers"]],
+  ["miegoti", "to sleep", ["miegu", "miegi", "miega", "miegame", "miegate", "miega"], ["miegojau", "miegojai", "miegojo", "miegojome", "miegojote", "miegojo"], ["miegosiu", "miegosi", "miegos", "miegosime", "miegosite", "miegos"]],
+  ["dirbti", "to work", ["dirbu", "dirbi", "dirba", "dirbame", "dirbate", "dirba"], ["dirbau", "dirbai", "dirbo", "dirbome", "dirbote", "dirbo"], ["dirbsiu", "dirbsi", "dirbs", "dirbsime", "dirbsite", "dirbs"]],
+  ["mokytis", "to learn / to study", ["mokausi", "mokaisi", "mokosi", "mokomės", "mokotės", "mokosi"], ["mokiausi", "mokeisi", "mokėsi", "mokėmės", "mokėtės", "mokėsi"], ["mokysiuosi", "mokysiesi", "mokysis", "mokysimės", "mokysitės", "mokysis"]],
+  ["skaityti", "to read", ["skaitau", "skaitai", "skaito", "skaitome", "skaitote", "skaito"], ["skaičiau", "skaitei", "skaitė", "skaitėme", "skaitėte", "skaitė"], ["skaitysiu", "skaitysi", "skaitys", "skaitysime", "skaitysite", "skaitys"]],
+  ["rašyti", "to write", ["rašau", "rašai", "rašo", "rašome", "rašote", "rašo"], ["rašiau", "rašei", "rašė", "rašėme", "rašėte", "rašė"], ["rašysiu", "rašysi", "rašys", "rašysime", "rašysite", "rašys"]],
+  ["matyti", "to see", ["matau", "matai", "mato", "matome", "matote", "mato"], ["mačiau", "matei", "matė", "matėme", "matėte", "matė"], ["matysiu", "matysi", "matys", "matysime", "matysite", "matys"]],
+  ["girdėti", "to hear", ["girdžiu", "girdi", "girdi", "girdime", "girdite", "girdi"], ["girdėjau", "girdėjai", "girdėjo", "girdėjome", "girdėjote", "girdėjo"], ["girdėsiu", "girdėsi", "girdės", "girdėsime", "girdėsite", "girdės"]],
+  ["žinoti", "to know (a fact)", ["žinau", "žinai", "žino", "žinome", "žinote", "žino"], ["žinojau", "žinojai", "žinojo", "žinojome", "žinojote", "žinojo"], ["žinosiu", "žinosi", "žinos", "žinosime", "žinosite", "žinos"]],
+  ["suprasti", "to understand", ["suprantu", "supranti", "supranta", "suprantame", "suprantate", "supranta"], ["supratau", "supratai", "suprato", "supratome", "supratote", "suprato"], ["suprasiu", "suprasi", "supras", "suprasime", "suprasite", "supras"]],
+  ["mylėti", "to love", ["myliu", "myli", "myli", "mylime", "mylite", "myli"], ["mylėjau", "mylėjai", "mylėjo", "mylėjome", "mylėjote", "mylėjo"], ["mylėsiu", "mylėsi", "mylės", "mylėsime", "mylėsite", "mylės"]],
+  ["patikti", "to like (be pleasing)", ["patinku", "patinki", "patinka", "patinkame", "patinkate", "patinka"], ["patikau", "patikai", "patiko", "patikome", "patikote", "patiko"], ["patiksiu", "patiksi", "patiks", "patiksime", "patiksite", "patiks"]],
+  ["gyventi", "to live", ["gyvenu", "gyveni", "gyvena", "gyvename", "gyvenate", "gyvena"], ["gyvenau", "gyvenai", "gyveno", "gyvenome", "gyvenote", "gyveno"], ["gyvensiu", "gyvensi", "gyvens", "gyvensime", "gyvensite", "gyvens"]],
+  ["ateiti", "to come", ["ateinu", "ateini", "ateina", "ateiname", "ateinate", "ateina"], ["atėjau", "atėjai", "atėjo", "atėjome", "atėjote", "atėjo"], ["ateisiu", "ateisi", "ateis", "ateisime", "ateisite", "ateis"]],
+  ["duoti", "to give", ["duodu", "duodi", "duoda", "duodame", "duodate", "duoda"], ["daviau", "davei", "davė", "davėme", "davėte", "davė"], ["duosiu", "duosi", "duos", "duosime", "duosite", "duos"]],
+  ["imti", "to take", ["imu", "imi", "ima", "imame", "imate", "ima"], ["ėmiau", "ėmei", "ėmė", "ėmėme", "ėmėte", "ėmė"], ["imsiu", "imsi", "ims", "imsime", "imsite", "ims"]],
+  ["pirkti", "to buy", ["perku", "perki", "perka", "perkame", "perkate", "perka"], ["pirkau", "pirkai", "pirko", "pirkome", "pirkote", "pirko"], ["pirksiu", "pirksi", "pirks", "pirksime", "pirksite", "pirks"]],
+  ["mokėti", "to pay / know how", ["moku", "moki", "moka", "mokame", "mokate", "moka"], ["mokėjau", "mokėjai", "mokėjo", "mokėjome", "mokėjote", "mokėjo"], ["mokėsiu", "mokėsi", "mokės", "mokėsime", "mokėsite", "mokės"]],
+  ["žaisti", "to play", ["žaidžiu", "žaidi", "žaidžia", "žaidžiame", "žaidžiate", "žaidžia"], ["žaidžiau", "žaidei", "žaidė", "žaidėme", "žaidėte", "žaidė"], ["žaisiu", "žaisi", "žais", "žaisime", "žaisite", "žais"]],
+  ["padėti", "to help", ["padedu", "padedi", "padeda", "padedame", "padedate", "padeda"], ["padėjau", "padėjai", "padėjo", "padėjome", "padėjote", "padėjo"], ["padėsiu", "padėsi", "padės", "padėsime", "padėsite", "padės"]],
+  ["laukti", "to wait", ["laukiu", "lauki", "laukia", "laukiame", "laukiate", "laukia"], ["laukiau", "laukei", "laukė", "laukėme", "laukėte", "laukė"], ["lauksiu", "lauksi", "lauks", "lauksime", "lauksite", "lauks"]],
+  ["bėgti", "to run", ["bėgu", "bėgi", "bėga", "bėgame", "bėgate", "bėga"], ["bėgau", "bėgai", "bėgo", "bėgome", "bėgote", "bėgo"], ["bėgsiu", "bėgsi", "bėgs", "bėgsime", "bėgsite", "bėgs"]],
+  ["klausti", "to ask", ["klausiu", "klausi", "klausia", "klausiame", "klausiate", "klausia"], ["klausiau", "klausei", "klausė", "klausėme", "klausėte", "klausė"], ["klausiu", "klausi", "klaus", "klausime", "klausite", "klaus"]],
+  ["atsakyti", "to answer", ["atsakau", "atsakai", "atsako", "atsakome", "atsakote", "atsako"], ["atsakiau", "atsakei", "atsakė", "atsakėme", "atsakėte", "atsakė"], ["atsakysiu", "atsakysi", "atsakys", "atsakysime", "atsakysite", "atsakys"]],
+  ["pradėti", "to begin", ["pradedu", "pradedi", "pradeda", "pradedame", "pradedate", "pradeda"], ["pradėjau", "pradėjai", "pradėjo", "pradėjome", "pradėjote", "pradėjo"], ["pradėsiu", "pradėsi", "pradės", "pradėsime", "pradėsite", "pradės"]],
+  ["baigti", "to finish", ["baigiu", "baigi", "baigia", "baigiame", "baigiate", "baigia"], ["baigiau", "baigei", "baigė", "baigėme", "baigėte", "baigė"], ["baigsiu", "baigsi", "baigs", "baigsime", "baigsite", "baigs"]]
+];
+
+// ---------- VERB CONJUGATIONS ----------
+const PERSONS = ["aš","tu","jis / ji","mes","jūs","jie / jos"];
+const TENSES = [["pres","Present"],["past","Past"],["fut","Future"]];
+const vPick = $('v-pick');
+vPick.innerHTML = '<option value="all">All verbs</option>' + CONJ.map((v,i) => `<option value="${i}">${v[0]} — ${v[1]}</option>`).join('');
+function vRender() {
+  const q = $('v-search').value.toLowerCase().trim();
+  const pick = vPick.value;
+  const tense = $('v-tense').value;
+  const shown = TENSES.filter(t => tense === 'all' || t[0] === tense);
+  const idx = { pres: 2, past: 3, fut: 4 };
+  let list = CONJ.map((v,i) => [v,i]).filter(([v,i]) =>
+    (pick === 'all' || String(i) === pick) &&
+    (!q || v[0].toLowerCase().includes(q) || v[1].toLowerCase().includes(q))
+  );
+  $('v-list').innerHTML = list.map(([v]) => {
+    const rows = PERSONS.map((p,pi) =>
+      `<tr><td class="pers">${p}</td>` +
+      shown.map(t => `<td><span class="frm" data-say="${v[idx[t[0]]][pi]}">${v[idx[t[0]]][pi]}</span></td>`).join('') +
+      `</tr>`
+    ).join('');
+    return `<div class="vcard">
+      <h3><span class="frm" data-say="${v[0]}">${v[0]}</span> <span class="ven">${v[1]}</span> <button class="speak sm" data-say="${v[0]}" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></h3>
+      <table class="vtable">
+        <thead><tr><th></th>${shown.map(t => `<th>${t[1]}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }).join('') || '<div style="color:var(--muted);">No verbs found — nieko nerasta.</div>';
+}
+$('v-list').addEventListener('click', e => {
+  const el = e.target.closest('[data-say]');
+  if (el) speak(el.dataset.say, el.classList.contains('speak') ? el : null);
+});
+$('v-search').addEventListener('input', vRender);
+vPick.addEventListener('change', vRender);
+$('v-tense').addEventListener('change', vRender);
+vRender();
 
 // ---------- BROWSE ----------
 function bRender() {
