@@ -138,6 +138,19 @@
   td.cat { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
   .tip { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--lt-yellow); border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; color: var(--muted); margin-bottom: 18px; }
   .tip b { color: var(--text); }
+  .speak {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    width: 38px; height: 38px; font-size: 1rem; cursor: pointer; font-family: inherit;
+    color: var(--text); transition: border-color .15s, transform .15s;
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+  }
+  .speak:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .speak.sm { width: 30px; height: 30px; font-size: 0.85rem; }
+  .speak.playing { border-color: var(--accent); color: var(--accent); }
+  .novoice { display: none; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--bad); border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; color: var(--muted); margin-bottom: 16px; }
+  .novoice.show { display: block; }
+  .word-row { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  label.autosay { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; color: var(--muted); cursor: pointer; }
   footer { padding: 40px 0 64px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
 </style>
 </head>
@@ -152,6 +165,8 @@
 
     <section>
       <div class="tip"><b>Pronunciation tips:</b> <b>č</b> = "ch", <b>š</b> = "sh", <b>ž</b> = "zh", <b>ė</b> = long "eh", <b>ū/ų</b> = long "oo", <b>y/į</b> = long "ee", <b>ai</b> = "eye", <b>ei</b> = "ay". Stress varies — listen to natives when you can!</div>
+
+      <div class="novoice" id="novoice">🔇 No Lithuanian voice found on this device. On desktop Chrome/Edge audio usually works out of the box; on iOS you can add a Lithuanian voice under Settings → Accessibility → Spoken Content → Voices.</div>
 
       <div class="tabs">
         <button class="tab active" data-panel="flash">🃏 Flashcards</button>
@@ -172,7 +187,7 @@
         </div>
         <div class="card" id="f-card">
           <div class="hintcat" id="f-cardcat"></div>
-          <div class="word" id="f-word"></div>
+          <div class="word-row"><div class="word" id="f-word"></div><button class="speak" id="f-speak" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></div>
           <div class="sub" id="f-sub"></div>
           <div class="flip-hint" id="f-hint">tap to flip</div>
         </div>
@@ -180,6 +195,7 @@
           <button class="btn bad" id="f-again">↺ Again</button>
           <button class="btn good" id="f-got">✓ Got it</button>
           <button class="btn" id="f-shuffle">🔀 Shuffle</button>
+          <label class="autosay"><input type="checkbox" id="f-auto"> auto-play 🔊</label>
         </div>
       </div>
 
@@ -195,7 +211,8 @@
         </div>
         <div class="progressbar"><div id="q-bar"></div></div>
         <div style="color:var(--muted);font-size:0.85rem;">What does this mean?</div>
-        <div class="q-word" id="q-word"></div>
+        <div class="word-row" style="justify-content:flex-start;"><div class="q-word" id="q-word" style="margin:0;"></div><button class="speak" id="q-speak" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></div>
+        <div style="height:18px;"></div>
         <div class="choices" id="q-choices"></div>
         <div class="feedback" id="q-feedback"></div>
       </div>
@@ -445,6 +462,38 @@ const $ = id => document.getElementById(id);
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pool = cat => cat === 'all' ? VOCAB : VOCAB.filter(v => v[2] === cat);
 
+// ---------- SPEECH (Web Speech API, lt-LT) ----------
+let ltVoice = null, voicesChecked = false;
+function pickVoice() {
+  const vs = speechSynthesis.getVoices();
+  if (!vs.length) return;
+  voicesChecked = true;
+  ltVoice = vs.find(v => v.lang.toLowerCase().startsWith('lt')) || null;
+  if (!ltVoice) $('novoice').classList.add('show');
+  else $('novoice').classList.remove('show');
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+  setTimeout(pickVoice, 1000);
+} else {
+  $('novoice').classList.add('show');
+}
+function speak(text, btn) {
+  if (!('speechSynthesis' in window)) return;
+  if (!voicesChecked) pickVoice();
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'lt-LT';
+  if (ltVoice) u.voice = ltVoice;
+  u.rate = 0.85;
+  if (btn) {
+    btn.classList.add('playing');
+    u.onend = u.onerror = () => btn.classList.remove('playing');
+  }
+  speechSynthesis.speak(u);
+}
+
 // Tabs
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -474,8 +523,11 @@ function fShow() {
   $('f-word').textContent = fFlipped ? (lt2en ? c[1] : c[0]) : (lt2en ? c[0] : c[1]);
   $('f-sub').textContent = '';
   $('f-hint').textContent = fFlipped ? 'tap to flip back' : 'tap to flip';
+  const showingLt = fFlipped !== ($('f-dir').value === 'lt2en');
+  if ($('f-auto').checked && showingLt) speak(c[0], $('f-speak'));
 }
 $('f-card').addEventListener('click', () => { fFlipped = !fFlipped; fShow(); });
+$('f-speak').addEventListener('click', e => { e.stopPropagation(); const c = fDeck[fIdx]; if (c) speak(c[0], $('f-speak')); });
 function fNext() { fIdx = (fIdx + 1) % fDeck.length; fFlipped = false; fShow(); }
 $('f-got').addEventListener('click', () => { fKnown++; $('f-known').textContent = fKnown; fNext(); });
 $('f-again').addEventListener('click', () => { fDeck.push(fDeck[fIdx]); $('f-count').textContent = fDeck.length; fNext(); });
@@ -525,6 +577,7 @@ function qPick(btn, c) {
   $('q-bar').style.width = (qTotal ? Math.round(qScore / qTotal * 100) : 0) + '%';
   setTimeout(qNext, correct ? 900 : 1900);
 }
+$('q-speak').addEventListener('click', () => { if (qAnswer) speak(qAnswer[0], $('q-speak')); });
 $('q-cat').addEventListener('change', qNext);
 $('q-dir').addEventListener('change', qNext);
 qNext();
@@ -536,11 +589,11 @@ function mNew() {
   $('m-found').textContent = 0; $('m-tries').textContent = 0; $('m-feedback').textContent = '';
   const pairs = shuffle(pool($('m-cat').value)).slice(0, 6);
   $('m-total').textContent = pairs.length;
-  const cards = shuffle(pairs.flatMap((p, i) => [{ t: p[0], id: i }, { t: p[1], id: i }]));
+  const cards = shuffle(pairs.flatMap((p, i) => [{ t: p[0], id: i, lt: p[0] }, { t: p[1], id: i, lt: p[0] }]));
   const grid = $('m-grid'); grid.innerHTML = '';
   cards.forEach(c => {
     const b = document.createElement('button');
-    b.className = 'mcard'; b.textContent = c.t; b.dataset.id = c.id;
+    b.className = 'mcard'; b.textContent = c.t; b.dataset.id = c.id; b.dataset.lt = c.lt;
     b.addEventListener('click', () => mPick(b));
     grid.appendChild(b);
   });
@@ -552,6 +605,7 @@ function mPick(b) {
   const a = mSel; mSel = null; a.classList.remove('sel');
   if (a.dataset.id === b.dataset.id) {
     a.classList.add('done'); b.classList.add('done');
+    speak(a.dataset.lt);
     mFound++; $('m-found').textContent = mFound;
     if (mFound === parseInt($('m-total').textContent)) {
       $('m-feedback').textContent = 'Puiku! All pairs matched in ' + mTries + ' attempts 🏆';
@@ -575,9 +629,13 @@ function bRender() {
     (!q || v[0].toLowerCase().includes(q) || v[1].toLowerCase().includes(q))
   );
   $('b-body').innerHTML = rows.map(v =>
-    `<tr><td class="lt">${v[0]}</td><td>${v[1]}</td><td class="cat">${v[2]}</td></tr>`
+    `<tr><td class="lt">${v[0]} <button class="speak sm" data-say="${v[0].replace(/"/g,'&quot;')}" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></td><td>${v[1]}</td><td class="cat">${v[2]}</td></tr>`
   ).join('') || '<tr><td colspan="3" style="color:var(--muted);">No matches — nieko nerasta.</td></tr>';
 }
+$('b-body').addEventListener('click', e => {
+  const b = e.target.closest('button[data-say]');
+  if (b) speak(b.dataset.say, b);
+});
 $('b-search').addEventListener('input', bRender);
 $('b-cat').addEventListener('change', bRender);
 bRender();
