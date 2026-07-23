@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learn Lithuanian · Morten Frandsen</title>
+<meta name="description" content="Interactive Lithuanian study page — flashcards, quizzes and matching games for common words, verbs and phrases.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171a23;
+    --text: #e8eaf0;
+    --muted: #9aa1b3;
+    --accent: #6ea8fe;
+    --border: #262a36;
+    --good: #4ade80;
+    --bad: #f87171;
+    --lt-yellow: #FDB913;
+    --lt-green: #006A44;
+    --lt-red: #C1272D;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfd;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --muted: #5c6270;
+      --accent: #2b6ef2;
+      --border: #e6e8ee;
+      --good: #16a34a;
+      --bad: #dc2626;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 56px 0 28px; }
+  .flag { display: inline-flex; flex-direction: column; width: 42px; height: 27px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+  .flag span { flex: 1; }
+  .flag .y { background: var(--lt-yellow); }
+  .flag .g { background: var(--lt-green); }
+  .flag .r { background: var(--lt-red); }
+  h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .tagline { color: var(--muted); font-size: 1.02rem; }
+  .back { display: inline-block; margin-top: 10px; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+  .back:hover { text-decoration: underline; }
+  section { padding: 28px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 16px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tab {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 16px; font-size: 0.92rem; color: var(--text); cursor: pointer;
+    font-family: inherit; transition: border-color .15s, transform .15s;
+  }
+  .tab:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .tab.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; color: var(--muted); font-size: 0.9rem; }
+  .stats b { color: var(--text); }
+  /* Flashcards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 28px; cursor: pointer; user-select: none;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card .word { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; }
+  .card .hintcat { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .card .sub { color: var(--muted); margin-top: 10px; font-size: 0.95rem; }
+  .card .flip-hint { color: var(--muted); font-size: 0.8rem; margin-top: 20px; }
+  .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 18px; font-size: 0.95rem; font-weight: 500; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s, transform .15s;
+  }
+  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .btn.good:hover { border-color: var(--good); }
+  .btn.bad:hover { border-color: var(--bad); }
+  select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 0.92rem;
+  }
+  /* Quiz */
+  .q-word { font-size: 1.6rem; font-weight: 700; margin: 8px 0 18px; }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; text-align: left; font-size: 1rem; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s;
+  }
+  .choice:hover { border-color: var(--accent); }
+  .choice.correct { border-color: var(--good); color: var(--good); font-weight: 600; }
+  .choice.wrong { border-color: var(--bad); color: var(--bad); }
+  .choice:disabled { cursor: default; }
+  .feedback { margin-top: 14px; font-size: 0.95rem; min-height: 1.4em; }
+  .feedback.ok { color: var(--good); }
+  .feedback.no { color: var(--bad); }
+  .progressbar { height: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .progressbar div { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+  /* Matching */
+  .match-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 520px) { .match-grid { grid-template-columns: repeat(3, 1fr); } }
+  .mcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 8px; min-height: 64px; font-size: 0.88rem; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s, opacity .3s;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+  .mcard:hover { border-color: var(--accent); }
+  .mcard.sel { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .mcard.done { opacity: 0.35; border-color: var(--good); cursor: default; }
+  .mcard.shake { border-color: var(--bad); }
+  /* Browse */
+  .search {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; color: var(--text); font-family: inherit; font-size: 0.95rem; margin-bottom: 14px;
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th { text-align: left; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td.lt { font-weight: 600; }
+  td.cat { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+  .tip { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--lt-yellow); border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; color: var(--muted); margin-bottom: 18px; }
+  .tip b { color: var(--text); }
+  footer { padding: 40px 0 64px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="flag"><span class="y"></span><span class="g"></span><span class="r"></span></span>
+      <h1>Learn Lithuanian</h1>
+      <div class="tagline">Mokykimės lietuvių kalbos! — Flashcards, quizzes and games for everyday words, verbs and phrases.</div>
+      <a class="back" href="index.html">← back to mehf.github.io</a>
+    </header>
+
+    <section>
+      <div class="tip"><b>Pronunciation tips:</b> <b>č</b> = "ch", <b>š</b> = "sh", <b>ž</b> = "zh", <b>ė</b> = long "eh", <b>ū/ų</b> = long "oo", <b>y/į</b> = long "ee", <b>ai</b> = "eye", <b>ei</b> = "ay". Stress varies — listen to natives when you can!</div>
+
+      <div class="tabs">
+        <button class="tab active" data-panel="flash">🃏 Flashcards</button>
+        <button class="tab" data-panel="quiz">✅ Quiz</button>
+        <button class="tab" data-panel="match">🧩 Matching</button>
+        <button class="tab" data-panel="browse">📖 Browse all</button>
+      </div>
+
+      <!-- FLASHCARDS -->
+      <div class="panel active" id="flash">
+        <div class="stats">Deck: <b id="f-count">0</b> cards · Known this session: <b id="f-known">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="f-cat"></select>
+          <select id="f-dir">
+            <option value="lt2en">Lithuanian → English</option>
+            <option value="en2lt">English → Lithuanian</option>
+          </select>
+        </div>
+        <div class="card" id="f-card">
+          <div class="hintcat" id="f-cardcat"></div>
+          <div class="word" id="f-word"></div>
+          <div class="sub" id="f-sub"></div>
+          <div class="flip-hint" id="f-hint">tap to flip</div>
+        </div>
+        <div class="row">
+          <button class="btn bad" id="f-again">↺ Again</button>
+          <button class="btn good" id="f-got">✓ Got it</button>
+          <button class="btn" id="f-shuffle">🔀 Shuffle</button>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="panel" id="quiz">
+        <div class="stats">Score: <b id="q-score">0</b> / <b id="q-total">0</b> · Streak: <b id="q-streak">0</b> 🔥 · Best: <b id="q-best">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="q-cat"></select>
+          <select id="q-dir">
+            <option value="lt2en">Lithuanian → English</option>
+            <option value="en2lt">English → Lithuanian</option>
+          </select>
+        </div>
+        <div class="progressbar"><div id="q-bar"></div></div>
+        <div style="color:var(--muted);font-size:0.85rem;">What does this mean?</div>
+        <div class="q-word" id="q-word"></div>
+        <div class="choices" id="q-choices"></div>
+        <div class="feedback" id="q-feedback"></div>
+      </div>
+
+      <!-- MATCHING -->
+      <div class="panel" id="match">
+        <div class="stats">Pairs found: <b id="m-found">0</b> / <b id="m-total">6</b> · Attempts: <b id="m-tries">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="m-cat"></select>
+          <button class="btn" id="m-new">🔄 New round</button>
+        </div>
+        <div class="match-grid" id="m-grid"></div>
+        <div class="feedback" id="m-feedback"></div>
+      </div>
+
+      <!-- BROWSE -->
+      <div class="panel" id="browse">
+        <input class="search" id="b-search" type="search" placeholder="Search words… e.g. labas, water, eiti">
+        <div class="row" style="margin:0 0 14px;"><select id="b-cat"></select></div>
+        <table>
+          <thead><tr><th>Lithuanian</th><th>English</th><th>Category</th></tr></thead>
+          <tbody id="b-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>Sėkmės! (Good luck!) · Built with plain HTML, CSS &amp; JS · <a href="index.html" style="color:var(--accent);">mehf.github.io</a></footer>
+  </div>
+
+<script>
+const VOCAB = [
+  // Greetings & basics
+  ["Labas","Hi / Hello","Greetings & Basics"],
+  ["Laba diena","Good day / Good afternoon","Greetings & Basics"],
+  ["Labas rytas","Good morning","Greetings & Basics"],
+  ["Labas vakaras","Good evening","Greetings & Basics"],
+  ["Labanakt","Good night","Greetings & Basics"],
+  ["Viso gero","Goodbye","Greetings & Basics"],
+  ["Iki","Bye / See you","Greetings & Basics"],
+  ["Iki pasimatymo","See you later","Greetings & Basics"],
+  ["Ačiū","Thank you","Greetings & Basics"],
+  ["Labai ačiū","Thank you very much","Greetings & Basics"],
+  ["Prašau","Please / You're welcome","Greetings & Basics"],
+  ["Atsiprašau","Sorry / Excuse me","Greetings & Basics"],
+  ["Taip","Yes","Greetings & Basics"],
+  ["Ne","No","Greetings & Basics"],
+  ["Gal","Maybe","Greetings & Basics"],
+  ["Gerai","Okay / Good","Greetings & Basics"],
+  ["Sveiki atvykę","Welcome","Greetings & Basics"],
+  ["Kaip sekasi?","How are you?","Greetings & Basics"],
+  ["Puikiai","Great / Excellent","Greetings & Basics"],
+  ["Malonu susipažinti","Nice to meet you","Greetings & Basics"],
+  // Common phrases
+  ["Aš nesuprantu","I don't understand","Phrases"],
+  ["Aš suprantu","I understand","Phrases"],
+  ["Ar kalbate angliškai?","Do you speak English?","Phrases"],
+  ["Aš truputį kalbu lietuviškai","I speak a little Lithuanian","Phrases"],
+  ["Kaip tai pasakyti lietuviškai?","How do you say that in Lithuanian?","Phrases"],
+  ["Pakartokite, prašau","Please repeat","Phrases"],
+  ["Kalbėkite lėčiau","Speak more slowly","Phrases"],
+  ["Kiek kainuoja?","How much does it cost?","Phrases"],
+  ["Kur yra tualetas?","Where is the toilet?","Phrases"],
+  ["Aš noriu valgyti","I want to eat","Phrases"],
+  ["Aš noriu gerti","I want to drink","Phrases"],
+  ["Aš tave myliu","I love you","Phrases"],
+  ["Man patinka","I like it","Phrases"],
+  ["Man nepatinka","I don't like it","Phrases"],
+  ["Kas tai yra?","What is this?","Phrases"],
+  ["Kur tu gyveni?","Where do you live?","Phrases"],
+  ["Aš gyvenu Honkonge","I live in Hong Kong","Phrases"],
+  ["Koks tavo vardas?","What is your name?","Phrases"],
+  ["Mano vardas yra…","My name is…","Phrases"],
+  ["Su gimtadieniu","Happy birthday","Phrases"],
+  ["Skanaus","Enjoy your meal (bon appétit)","Phrases"],
+  ["Į sveikatą","Cheers / To your health","Phrases"],
+  ["Sėkmės","Good luck","Phrases"],
+  ["Viskas gerai","Everything is fine","Phrases"],
+  ["Padėkite man, prašau","Help me, please","Phrases"],
+  // Verbs
+  ["būti","to be","Verbs"],
+  ["turėti","to have","Verbs"],
+  ["eiti","to go (on foot)","Verbs"],
+  ["važiuoti","to go (by vehicle)","Verbs"],
+  ["norėti","to want","Verbs"],
+  ["galėti","to be able / can","Verbs"],
+  ["daryti","to do / to make","Verbs"],
+  ["sakyti","to say","Verbs"],
+  ["kalbėti","to speak","Verbs"],
+  ["valgyti","to eat","Verbs"],
+  ["gerti","to drink","Verbs"],
+  ["miegoti","to sleep","Verbs"],
+  ["dirbti","to work","Verbs"],
+  ["mokytis","to learn / to study","Verbs"],
+  ["skaityti","to read","Verbs"],
+  ["rašyti","to write","Verbs"],
+  ["matyti","to see","Verbs"],
+  ["girdėti","to hear","Verbs"],
+  ["žinoti","to know (a fact)","Verbs"],
+  ["suprasti","to understand","Verbs"],
+  ["mylėti","to love","Verbs"],
+  ["patikti","to like","Verbs"],
+  ["gyventi","to live","Verbs"],
+  ["ateiti","to come","Verbs"],
+  ["duoti","to give","Verbs"],
+  ["imti","to take","Verbs"],
+  ["pirkti","to buy","Verbs"],
+  ["mokėti","to pay / to know how","Verbs"],
+  ["žaisti","to play","Verbs"],
+  ["padėti","to help","Verbs"],
+  ["laukti","to wait","Verbs"],
+  ["bėgti","to run","Verbs"],
+  ["klausti","to ask","Verbs"],
+  ["atsakyti","to answer","Verbs"],
+  ["pradėti","to begin","Verbs"],
+  ["baigti","to finish","Verbs"],
+  // Family & people
+  ["šeima","family","Family & People"],
+  ["mama","mom","Family & People"],
+  ["tėtis","dad","Family & People"],
+  ["sūnus","son","Family & People"],
+  ["dukra","daughter","Family & People"],
+  ["vaikas","child","Family & People"],
+  ["brolis","brother","Family & People"],
+  ["sesuo","sister","Family & People"],
+  ["senelis","grandfather","Family & People"],
+  ["senelė","grandmother","Family & People"],
+  ["vyras","man / husband","Family & People"],
+  ["moteris","woman","Family & People"],
+  ["žmona","wife","Family & People"],
+  ["draugas","friend (male)","Family & People"],
+  ["draugė","friend (female)","Family & People"],
+  ["berniukas","boy","Family & People"],
+  ["mergaitė","girl","Family & People"],
+  // Food & drink
+  ["duona","bread","Food & Drink"],
+  ["vanduo","water","Food & Drink"],
+  ["pienas","milk","Food & Drink"],
+  ["kava","coffee","Food & Drink"],
+  ["arbata","tea","Food & Drink"],
+  ["alus","beer","Food & Drink"],
+  ["sūris","cheese","Food & Drink"],
+  ["mėsa","meat","Food & Drink"],
+  ["žuvis","fish","Food & Drink"],
+  ["kiaušinis","egg","Food & Drink"],
+  ["obuolys","apple","Food & Drink"],
+  ["bulvė","potato","Food & Drink"],
+  ["sriuba","soup","Food & Drink"],
+  ["cepelinai","zeppelins (potato dumplings)","Food & Drink"],
+  ["šaltibarščiai","cold beet soup","Food & Drink"],
+  ["ledai","ice cream","Food & Drink"],
+  ["cukrus","sugar","Food & Drink"],
+  ["druska","salt","Food & Drink"],
+  ["vaisiai","fruit","Food & Drink"],
+  ["daržovės","vegetables","Food & Drink"],
+  ["pusryčiai","breakfast","Food & Drink"],
+  ["pietūs","lunch","Food & Drink"],
+  ["vakarienė","dinner","Food & Drink"],
+  // Numbers
+  ["vienas","one","Numbers"],
+  ["du","two","Numbers"],
+  ["trys","three","Numbers"],
+  ["keturi","four","Numbers"],
+  ["penki","five","Numbers"],
+  ["šeši","six","Numbers"],
+  ["septyni","seven","Numbers"],
+  ["aštuoni","eight","Numbers"],
+  ["devyni","nine","Numbers"],
+  ["dešimt","ten","Numbers"],
+  ["dvidešimt","twenty","Numbers"],
+  ["šimtas","one hundred","Numbers"],
+  ["tūkstantis","one thousand","Numbers"],
+  // Time & days
+  ["diena","day","Time"],
+  ["naktis","night","Time"],
+  ["rytas","morning","Time"],
+  ["vakaras","evening","Time"],
+  ["šiandien","today","Time"],
+  ["rytoj","tomorrow","Time"],
+  ["vakar","yesterday","Time"],
+  ["dabar","now","Time"],
+  ["savaitė","week","Time"],
+  ["mėnuo","month / moon","Time"],
+  ["metai","year","Time"],
+  ["pirmadienis","Monday","Time"],
+  ["antradienis","Tuesday","Time"],
+  ["trečiadienis","Wednesday","Time"],
+  ["ketvirtadienis","Thursday","Time"],
+  ["penktadienis","Friday","Time"],
+  ["šeštadienis","Saturday","Time"],
+  ["sekmadienis","Sunday","Time"],
+  ["valanda","hour","Time"],
+  ["minutė","minute","Time"],
+  // Everyday things & places
+  ["namas","house","Everyday"],
+  ["namai","home","Everyday"],
+  ["butas","apartment","Everyday"],
+  ["miestas","city","Everyday"],
+  ["gatvė","street","Everyday"],
+  ["parduotuvė","shop / store","Everyday"],
+  ["mokykla","school","Everyday"],
+  ["darbas","work / job","Everyday"],
+  ["knyga","book","Everyday"],
+  ["telefonas","phone","Everyday"],
+  ["mašina","car","Everyday"],
+  ["autobusas","bus","Everyday"],
+  ["traukinys","train","Everyday"],
+  ["lėktuvas","airplane","Everyday"],
+  ["oro uostas","airport","Everyday"],
+  ["pinigai","money","Everyday"],
+  ["raktas","key","Everyday"],
+  ["durys","door","Everyday"],
+  ["langas","window","Everyday"],
+  ["stalas","table","Everyday"],
+  ["kėdė","chair","Everyday"],
+  ["lova","bed","Everyday"],
+  ["šuo","dog","Everyday"],
+  ["katė","cat","Everyday"],
+  ["saulė","sun","Everyday"],
+  ["lietus","rain","Everyday"],
+  ["sniegas","snow","Everyday"],
+  ["jūra","sea","Everyday"],
+  ["miškas","forest","Everyday"],
+  // Adjectives & small words
+  ["didelis","big","Adjectives"],
+  ["mažas","small","Adjectives"],
+  ["geras","good","Adjectives"],
+  ["blogas","bad","Adjectives"],
+  ["gražus","beautiful","Adjectives"],
+  ["naujas","new","Adjectives"],
+  ["senas","old","Adjectives"],
+  ["šiltas","warm","Adjectives"],
+  ["šaltas","cold","Adjectives"],
+  ["greitas","fast","Adjectives"],
+  ["lėtas","slow","Adjectives"],
+  ["laimingas","happy","Adjectives"],
+  ["skanus","tasty / delicious","Adjectives"],
+  ["brangus","expensive / dear","Adjectives"],
+  ["pigus","cheap","Adjectives"],
+  ["čia","here","Adjectives"],
+  ["ten","there","Adjectives"],
+  ["daug","a lot / many","Adjectives"],
+  ["mažai","a little / few","Adjectives"]
+];
+
+const CATS = [...new Set(VOCAB.map(v => v[2]))];
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pool = cat => cat === 'all' ? VOCAB : VOCAB.filter(v => v[2] === cat);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  $(t.dataset.panel).classList.add('active');
+}));
+
+// Category selects
+['f-cat','q-cat','m-cat','b-cat'].forEach(id => {
+  const s = $(id);
+  s.innerHTML = '<option value="all">All categories</option>' + CATS.map(c => `<option>${c}</option>`).join('');
+});
+
+// ---------- FLASHCARDS ----------
+let fDeck = [], fIdx = 0, fFlipped = false, fKnown = 0;
+function fBuild() {
+  fDeck = shuffle(pool($('f-cat').value));
+  fIdx = 0; fFlipped = false;
+  $('f-count').textContent = fDeck.length;
+  fShow();
+}
+function fShow() {
+  const c = fDeck[fIdx]; if (!c) return;
+  const lt2en = $('f-dir').value === 'lt2en';
+  $('f-cardcat').textContent = c[2] + ' · ' + (fIdx + 1) + '/' + fDeck.length;
+  $('f-word').textContent = fFlipped ? (lt2en ? c[1] : c[0]) : (lt2en ? c[0] : c[1]);
+  $('f-sub').textContent = '';
+  $('f-hint').textContent = fFlipped ? 'tap to flip back' : 'tap to flip';
+}
+$('f-card').addEventListener('click', () => { fFlipped = !fFlipped; fShow(); });
+function fNext() { fIdx = (fIdx + 1) % fDeck.length; fFlipped = false; fShow(); }
+$('f-got').addEventListener('click', () => { fKnown++; $('f-known').textContent = fKnown; fNext(); });
+$('f-again').addEventListener('click', () => { fDeck.push(fDeck[fIdx]); $('f-count').textContent = fDeck.length; fNext(); });
+$('f-shuffle').addEventListener('click', fBuild);
+$('f-cat').addEventListener('change', fBuild);
+$('f-dir').addEventListener('change', () => { fFlipped = false; fShow(); });
+fBuild();
+
+// ---------- QUIZ ----------
+let qScore = 0, qTotal = 0, qStreak = 0, qBest = 0, qAnswer = null, qLocked = false;
+try { qBest = parseInt(localStorage.getItem('lt-best') || '0'); } catch(e) {}
+$('q-best').textContent = qBest;
+function qNext() {
+  qLocked = false;
+  $('q-feedback').textContent = ''; $('q-feedback').className = 'feedback';
+  const p = pool($('q-cat').value);
+  const lt2en = $('q-dir').value === 'lt2en';
+  const picks = shuffle(p).slice(0, 4);
+  qAnswer = picks[0];
+  $('q-word').textContent = lt2en ? qAnswer[0] : qAnswer[1];
+  const box = $('q-choices'); box.innerHTML = '';
+  shuffle(picks).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = lt2en ? c[1] : c[0];
+    b.addEventListener('click', () => qPick(b, c));
+    box.appendChild(b);
+  });
+}
+function qPick(btn, c) {
+  if (qLocked) return; qLocked = true;
+  qTotal++;
+  const lt2en = $('q-dir').value === 'lt2en';
+  const correct = c === qAnswer;
+  if (correct) {
+    btn.classList.add('correct'); qScore++; qStreak++;
+    if (qStreak > qBest) { qBest = qStreak; try { localStorage.setItem('lt-best', qBest); } catch(e) {} }
+    $('q-feedback').textContent = 'Teisingai! (Correct!) 🎉'; $('q-feedback').className = 'feedback ok';
+  } else {
+    btn.classList.add('wrong'); qStreak = 0;
+    [...$('q-choices').children].forEach(b => { if (b.textContent === (lt2en ? qAnswer[1] : qAnswer[0])) b.classList.add('correct'); });
+    $('q-feedback').textContent = 'Ne visai — "' + qAnswer[0] + '" means "' + qAnswer[1] + '".'; $('q-feedback').className = 'feedback no';
+  }
+  [...$('q-choices').children].forEach(b => b.disabled = true);
+  $('q-score').textContent = qScore; $('q-total').textContent = qTotal;
+  $('q-streak').textContent = qStreak; $('q-best').textContent = qBest;
+  $('q-bar').style.width = (qTotal ? Math.round(qScore / qTotal * 100) : 0) + '%';
+  setTimeout(qNext, correct ? 900 : 1900);
+}
+$('q-cat').addEventListener('change', qNext);
+$('q-dir').addEventListener('change', qNext);
+qNext();
+
+// ---------- MATCHING ----------
+let mSel = null, mFound = 0, mTries = 0;
+function mNew() {
+  mSel = null; mFound = 0; mTries = 0;
+  $('m-found').textContent = 0; $('m-tries').textContent = 0; $('m-feedback').textContent = '';
+  const pairs = shuffle(pool($('m-cat').value)).slice(0, 6);
+  $('m-total').textContent = pairs.length;
+  const cards = shuffle(pairs.flatMap((p, i) => [{ t: p[0], id: i }, { t: p[1], id: i }]));
+  const grid = $('m-grid'); grid.innerHTML = '';
+  cards.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'mcard'; b.textContent = c.t; b.dataset.id = c.id;
+    b.addEventListener('click', () => mPick(b));
+    grid.appendChild(b);
+  });
+}
+function mPick(b) {
+  if (b.classList.contains('done') || b === mSel) return;
+  if (!mSel) { mSel = b; b.classList.add('sel'); return; }
+  mTries++; $('m-tries').textContent = mTries;
+  const a = mSel; mSel = null; a.classList.remove('sel');
+  if (a.dataset.id === b.dataset.id) {
+    a.classList.add('done'); b.classList.add('done');
+    mFound++; $('m-found').textContent = mFound;
+    if (mFound === parseInt($('m-total').textContent)) {
+      $('m-feedback').textContent = 'Puiku! All pairs matched in ' + mTries + ' attempts 🏆';
+      $('m-feedback').className = 'feedback ok';
+    }
+  } else {
+    a.classList.add('shake'); b.classList.add('shake');
+    setTimeout(() => { a.classList.remove('shake'); b.classList.remove('shake'); }, 500);
+  }
+}
+$('m-new').addEventListener('click', mNew);
+$('m-cat').addEventListener('change', mNew);
+mNew();
+
+// ---------- BROWSE ----------
+function bRender() {
+  const q = $('b-search').value.toLowerCase().trim();
+  const cat = $('b-cat').value;
+  const rows = VOCAB.filter(v =>
+    (cat === 'all' || v[2] === cat) &&
+    (!q || v[0].toLowerCase().includes(q) || v[1].toLowerCase().includes(q))
+  );
+  $('b-body').innerHTML = rows.map(v =>
+    `<tr><td class="lt">${v[0]}</td><td>${v[1]}</td><td class="cat">${v[2]}</td></tr>`
+  ).join('') || '<tr><td colspan="3" style="color:var(--muted);">No matches — nieko nerasta.</td></tr>';
+}
+$('b-search').addEventListener('input', bRender);
+$('b-cat').addEventListener('change', bRender);
+bRender();
+</script>
+</body>
+</html>
