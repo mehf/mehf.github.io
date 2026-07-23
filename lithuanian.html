@@ -161,6 +161,53 @@
   .vtable td.pers { color: var(--muted); white-space: nowrap; }
   .vtable td span.frm { cursor: pointer; border-bottom: 1px dotted var(--border); }
   .vtable td span.frm:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  /* Comic stories */
+  .story-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 480px) { .story-picker { grid-template-columns: 1fr; } }
+  .story-tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; cursor: pointer; font-family: inherit; text-align: left; color: var(--text);
+    transition: transform .15s, border-color .15s;
+  }
+  .story-tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .story-tile .emoji { font-size: 1.8rem; display: block; margin-bottom: 8px; }
+  .story-tile h3 { font-size: 1.02rem; font-weight: 600; }
+  .story-tile p { color: var(--muted); font-size: 0.85rem; margin: 4px 0 0; }
+  .story-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .story-head h3 { font-size: 1.25rem; font-weight: 700; }
+  .story-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 14px; }
+  .panelbox {
+    background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+    padding: 18px; margin-bottom: 16px; position: relative;
+  }
+  .panel-num {
+    position: absolute; top: -11px; left: 14px; background: var(--lt-yellow); color: #1a1d26;
+    font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 2px 10px; letter-spacing: 0.04em;
+  }
+  .scene { font-size: 2.2rem; text-align: center; margin: 6px 0 12px; letter-spacing: 6px; }
+  .caption { color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; margin-bottom: 12px; }
+  .bubble {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+    padding: 10px 14px; margin: 8px 0; max-width: 85%; cursor: pointer; position: relative;
+    transition: border-color .15s;
+  }
+  .bubble:hover { border-color: var(--accent); }
+  .bubble.right { margin-left: auto; border-bottom-right-radius: 4px; }
+  .bubble.left { margin-right: auto; border-bottom-left-radius: 4px; }
+  .bubble.thought { border-style: dashed; font-style: italic; }
+  .bubble .who { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 2px; }
+  .bubble .lt-line { font-size: 1.02rem; font-weight: 500; }
+  .bubble .en-line { display: none; color: var(--muted); font-size: 0.88rem; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border); }
+  .bubble.open .en-line { display: block; }
+  .story-nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .story-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .tap-tip { color: var(--muted); font-size: 0.82rem; margin-bottom: 12px; }
+  .glossary { margin-top: 6px; }
+  .glossary summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+  .glossary div { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .gword { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; }
+  .gword b { font-weight: 600; }
+  .gword span { color: var(--muted); }
   footer { padding: 40px 0 64px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
 </style>
 </head>
@@ -183,6 +230,7 @@
         <button class="tab" data-panel="quiz">✅ Quiz</button>
         <button class="tab" data-panel="match">🧩 Matching</button>
         <button class="tab" data-panel="verbs">🔤 Verbs</button>
+        <button class="tab" data-panel="stories">📚 Stories</button>
         <button class="tab" data-panel="browse">📖 Browse all</button>
       </div>
 
@@ -253,6 +301,29 @@
           </select>
         </div>
         <div id="v-list"></div>
+      </div>
+
+      <!-- STORIES -->
+      <div class="panel" id="stories">
+        <div id="s-picker-wrap">
+          <div class="tip"><b>Komiksai!</b> Short, silly comic stories in easy Lithuanian. Tap any speech bubble to see the English, tap 🔊 to hear it. Pick a story:</div>
+          <div class="story-picker" id="s-picker"></div>
+        </div>
+        <div id="s-reader" style="display:none;">
+          <div class="story-head"><h3 id="s-title"></h3><button class="speak" id="s-playall" title="Play whole story" aria-label="Play whole story">▶️</button></div>
+          <div class="story-sub" id="s-subtitle"></div>
+          <div class="story-tools">
+            <button class="btn" id="s-back">← All stories</button>
+            <button class="btn" id="s-toggle-en">Show all English</button>
+          </div>
+          <div class="tap-tip">💡 Tap a bubble for English · tap 🔊 in a bubble to hear it in Lithuanian</div>
+          <div id="s-panels"></div>
+          <details class="glossary"><summary>📖 Key words in this story</summary><div id="s-gloss"></div></details>
+          <div class="story-nav">
+            <button class="btn" id="s-prev">← Previous story</button>
+            <button class="btn" id="s-next">Next story →</button>
+          </div>
+        </div>
       </div>
 
       <!-- BROWSE -->
@@ -732,6 +803,248 @@ $('v-search').addEventListener('input', vRender);
 vPick.addEventListener('change', vRender);
 $('v-tense').addEventListener('change', vRender);
 vRender();
+
+// ---------- COMIC STORIES ----------
+// bubble: [who, side(l/r/c), lt, en, thought?]
+const STORIES = [
+{
+  emoji: "🥟", title: "Cepelinai pas močiutę", subtitle: "Zeppelins at grandma's — a survival story",
+  teaser: "Tomas visits grandma. She has ONE rule: you must eat.",
+  gloss: [["močiutė","grandma"],["alkanas","hungry"],["sotus","full (not hungry)"],["dar","more / still"],["valgyk","eat! (command)"],["pilvas","belly"]],
+  panels: [
+    { scene:"🏡👵🥟", caption:"Tomas atvažiuoja pas močiutę į kaimą. (Tomas arrives at grandma's in the countryside.)",
+      bubbles:[
+        ["Močiutė","l","Tomai! Tu toks plonas! Ar tu alkanas?","Tomas! You are so thin! Are you hungry?"],
+        ["Tomas","r","Ne, močiute, aš ne alkanas. Aš valgiau namie.","No, grandma, I'm not hungry. I ate at home."],
+        ["Močiutė","l","Nesąmonė. Sėsk. Aš turiu cepelinų.","Nonsense. Sit down. I have cepelinai."]
+      ]},
+    { scene:"🍽️🥟🥟🥟", caption:"Ant stalo — trys dideli cepelinai. (On the table — three big zeppelins.)",
+      bubbles:[
+        ["Tomas","r","Močiute, vienas cepelinas yra kaip mano galva!","Grandma, one cepelinas is like my head!"],
+        ["Močiutė","l","Taip. Todėl aš daviau tau tris. Valgyk!","Yes. That's why I gave you three. Eat!"],
+        ["Tomas","r","Aš pabandysiu…","I will try…",true]
+      ]},
+    { scene:"😅🥟🍴", caption:"Po vienos valandos. (After one hour.)",
+      bubbles:[
+        ["Tomas","r","Viskas, močiute. Aš sotus. Labai sotus.","That's it, grandma. I'm full. Very full."],
+        ["Močiutė","l","Puiku! Dabar — blynai su uogiene!","Great! Now — pancakes with jam!"],
+        ["Tomas","r","Mano pilvas verkia…","My belly is crying…",true]
+      ]},
+    { scene:"🚗😴💤", caption:"Vakare. (In the evening.)",
+      bubbles:[
+        ["Mama","l","Kaip buvo pas močiutę?","How was it at grandma's?"],
+        ["Tomas","r","Aš negaliu kalbėti. Aš galiu tik miegoti.","I can't talk. I can only sleep."],
+        ["Mama","l","Taigi… buvo gerai!","So… it was good!"]
+      ]}
+  ]
+},
+{
+  emoji: "🏀", title: "Krepšinis — antra religija", subtitle: "Basketball — the second religion",
+  teaser: "Lithuania plays tonight. The whole country stops.",
+  gloss: [["krepšinis","basketball"],["rungtynės","match / game"],["laimėti","to win"],["šiandien","today"],["visi","everyone"],["svarbu","important"]],
+  panels: [
+    { scene:"🇱🇹📺🏀", caption:"Šiandien Lietuva žaidžia krepšinį. (Today Lithuania plays basketball.)",
+      bubbles:[
+        ["Rūta","l","Ar eisime šiandien į kiną?","Shall we go to the cinema today?"],
+        ["Jonas","r","Į kiną?! Šiandien rungtynės! Lietuva žaidžia!","To the cinema?! Today is the match! Lithuania is playing!"],
+        ["Rūta","l","Bet tu nežiūrėjai kino jau metus…","But you haven't watched a movie in a year…"]
+      ]},
+    { scene:"🏪🚫🧍", caption:"Parduotuvė tuščia. Gatvės tuščios. (The shop is empty. The streets are empty.)",
+      bubbles:[
+        ["Turistas","l","Kur visi žmonės? Ar čia šventė?","Where are all the people? Is it a holiday here?"],
+        ["Pardavėja","r","Ne. Krepšinis. Ateik po dviejų valandų.","No. Basketball. Come back in two hours."]
+      ]},
+    { scene:"📺😱🍿", caption:"Paskutinė minutė. Rezultatas lygus. (Last minute. The score is tied.)",
+      bubbles:[
+        ["Jonas","r","Mesk! MESK! TAIP!!! TRYS TAŠKAI!","Shoot! SHOOT! YES!!! THREE POINTS!"],
+        ["Rūta","l","Kaimynai skambina. Sako, kad tu labai garsus.","The neighbours are calling. They say you are very loud."],
+        ["Jonas","r","Kaimynai irgi žiūri. Jie taip pat rėkia.","The neighbours are watching too. They are also screaming."]
+      ]},
+    { scene:"🏆🎉🇱🇹", caption:"Lietuva laimi! (Lithuania wins!)",
+      bubbles:[
+        ["Jonas","r","Aš verkiu. Bet tai laimės ašaros.","I am crying. But these are tears of happiness."],
+        ["Rūta","l","Gerai. Rytoj — kinas?","Okay. Tomorrow — cinema?"],
+        ["Jonas","r","Rytoj pusfinalis, Rūta.","Tomorrow is the semifinal, Rūta."]
+      ]}
+  ]
+},
+{
+  emoji: "🍄", title: "Grybai — rimtas sportas", subtitle: "Mushrooms — a serious sport",
+  teaser: "4 AM. The forest. The national championship of mushroom picking.",
+  gloss: [["grybas","mushroom"],["miškas","forest"],["anksti","early"],["krepšys","basket"],["rasti","to find"],["baravykas","porcini (king bolete)"]],
+  panels: [
+    { scene:"🌙⏰😴", caption:"Ketvirta valanda ryto. (Four o'clock in the morning.)",
+      bubbles:[
+        ["Tėtis","l","Kelkis! Važiuojame į mišką! Grybai laukia!","Get up! We're going to the forest! The mushrooms are waiting!"],
+        ["Marius","r","Tėti, dabar naktis. Net saulė miega.","Dad, it's night now. Even the sun is sleeping."],
+        ["Tėtis","l","Todėl ir važiuojame! Kiti žmonės dar miega!","That's exactly why we're going! Other people are still sleeping!"]
+      ]},
+    { scene:"🌲🌲🍄", caption:"Miške. Tylu. Labai tylu. (In the forest. Quiet. Very quiet.)",
+      bubbles:[
+        ["Marius","r","Tėti, aš radau grybą! Didelį!","Dad, I found a mushroom! A big one!"],
+        ["Tėtis","l","Ššš! Tyliau! Kiti grybautojai girdės!","Shhh! Quieter! Other mushroom pickers will hear!"],
+        ["Marius","r","Čia miškas, ne bankas…","This is a forest, not a bank…",true]
+      ]},
+    { scene:"👀🧺🏃", caption:"Kitas grybautojas ateina. (Another mushroom picker approaches.)",
+      bubbles:[
+        ["Grybautojas","l","Labas rytas! Ar radote grybų?","Good morning! Did you find any mushrooms?"],
+        ["Tėtis","r","Ne. Nieko. Miškas tuščias. Eikite namo.","No. Nothing. The forest is empty. Go home."],
+        ["Marius","r","Tėčio krepšys pilnas baravykų…","Dad's basket is full of porcini…",true]
+      ]},
+    { scene:"🏠🍄🍳", caption:"Namie. Mama skaičiuoja grybus. (At home. Mom is counting mushrooms.)",
+      bubbles:[
+        ["Mama","l","Šimtas baravykų! Ką mes darysime su šimtu baravykų?","A hundred porcini! What will we do with a hundred porcini?"],
+        ["Tėtis","r","Valgysime. Visą žiemą. Kiekvieną dieną.","We will eat. All winter. Every day."],
+        ["Marius","r","Vėl grybų sriuba…","Mushroom soup again…",true]
+      ]}
+  ]
+},
+{
+  emoji: "🥣", title: "Rožinė sriuba", subtitle: "The pink soup — šaltibarščiai",
+  teaser: "A Danish tourist meets Lithuania's famous cold pink soup.",
+  gloss: [["šaltibarščiai","cold beet soup"],["rožinis","pink"],["šaltas","cold"],["skanus","tasty"],["bandyti","to try"],["vasara","summer"]],
+  panels: [
+    { scene:"☀️🍽️🇩🇰", caption:"Vasara Vilniuje. Karšta diena. (Summer in Vilnius. A hot day.)",
+      bubbles:[
+        ["Padavėja","l","Laba diena! Ką norėsite?","Good day! What would you like?"],
+        ["Lars","r","Aš noriu sriubos. Kokią sriubą turite?","I want soup. What soup do you have?"],
+        ["Padavėja","l","Šaltibarščius! Mūsų vasaros karalius.","Šaltibarščiai! The king of our summer."]
+      ]},
+    { scene:"🥣💗😨", caption:"Sriuba atvažiuoja. Ji labai rožinė. (The soup arrives. It is very pink.)",
+      bubbles:[
+        ["Lars","r","Atsiprašau… kodėl sriuba rožinė?","Excuse me… why is the soup pink?"],
+        ["Padavėja","l","Burokėliai ir kefyras! Ir ji šalta.","Beetroots and kefir! And it's cold."],
+        ["Lars","r","Šalta? Rožinė? Ar tai tikrai sriuba?","Cold? Pink? Is this really soup?",true]
+      ]},
+    { scene:"🥄😳😋", caption:"Lars bando. (Lars tries.)",
+      bubbles:[
+        ["Lars","r","Hmm… tai… tai labai skanu!","Hmm… it's… it's very tasty!"],
+        ["Padavėja","l","Žinoma! Su karštomis bulvėmis — dar geriau.","Of course! With hot potatoes — even better."],
+        ["Lars","r","Šalta sriuba ir karštos bulvės. Lietuva, tu keista. Bet aš tave myliu.","Cold soup and hot potatoes. Lithuania, you are strange. But I love you."]
+      ]},
+    { scene:"📸🥣🌍", caption:"Lars fotografuoja sriubą. (Lars photographs the soup.)",
+      bubbles:[
+        ["Lars","r","Mano draugai Danijoje nepatikės.","My friends in Denmark won't believe it."],
+        ["Padavėja","l","Visi turistai taip sako. Paskui visi nori dar.","All tourists say that. Then they all want more."],
+        ["Lars","r","…Ar galima dar vieną lėkštę?","…Can I have one more plate?"]
+      ]}
+  ]
+},
+{
+  emoji: "🎄", title: "Dvylika patiekalų", subtitle: "Twelve dishes — Christmas Eve marathon",
+  teaser: "Kūčios: one night, twelve dishes. No one leaves the table.",
+  gloss: [["Kūčios","Christmas Eve (Lithuanian)"],["patiekalas","dish (food)"],["dvylika","twelve"],["šeima","family"],["tradicija","tradition"],["silkė","herring"]],
+  panels: [
+    { scene:"🎄🕯️🍽️", caption:"Gruodžio dvidešimt ketvirta. Kūčios. (December 24th. Kūčios.)",
+      bubbles:[
+        ["Mama","l","Šiandien valgome dvylika patiekalų. Tradicija!","Today we eat twelve dishes. Tradition!"],
+        ["Vaikas","r","Dvylika?! Aš turiu tik vieną pilvą!","Twelve?! I only have one belly!"],
+        ["Mama","l","Po vieną patiekalą kiekvienam mėnesiui. Pradedam!","One dish for each month. Let's start!"]
+      ]},
+    { scene:"🐟🐟🐟", caption:"Patiekalai: silkė, silkė ir… silkė. (The dishes: herring, herring and… herring.)",
+      bubbles:[
+        ["Vaikas","r","Mama, trys patiekalai yra silkė!","Mom, three dishes are herring!"],
+        ["Mama","l","Taip. Silkė su morkomis, silkė su grybais, silkė su svogūnais. Trys!","Yes. Herring with carrots, herring with mushrooms, herring with onions. Three!"],
+        ["Senelis","l","Mano laikais buvo penkios silkės…","In my day there were five herrings…"]
+      ]},
+    { scene:"🥟🥛🌙", caption:"Numeris dvylika: kūčiukai su aguonų pienu. (Number twelve: kūčiukai with poppy seed milk.)",
+      bubbles:[
+        ["Vaikas","r","Maži sausainiai plaukia piene… kaip valtys!","Little cookies are swimming in milk… like boats!"],
+        ["Mama","l","Valgyk valtis. Tada — dovanos!","Eat the boats. Then — presents!"],
+        ["Vaikas","r","Dovanos! Aš valgau greitai!","Presents! I'm eating fast!"]
+      ]},
+    { scene:"🎁😴🎄", caption:"Po vakarienės. (After dinner.)",
+      bubbles:[
+        ["Mama","l","Kur vaikas? Dovanos čia!","Where is the child? The presents are here!"],
+        ["Tėtis","r","Jis miega po stalu. Dvylika patiekalų laimėjo.","He's sleeping under the table. The twelve dishes won."],
+        ["Senelis","l","Mano laikais mes miegodavome po stalu iki sausio…","In my day we would sleep under the table until January…"]
+      ]}
+  ]
+}
+];
+
+let sIdx = -1, sReading = false;
+function sShowPicker() {
+  sReading = false;
+  speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  $('s-picker-wrap').style.display = '';
+  $('s-reader').style.display = 'none';
+  $('s-picker').innerHTML = STORIES.map((s,i) =>
+    `<button class="story-tile" data-i="${i}"><span class="emoji">${s.emoji}</span><h3>${s.title}</h3><p>${s.teaser}</p></button>`
+  ).join('');
+}
+function sOpen(i) {
+  sIdx = (i + STORIES.length) % STORIES.length;
+  const s = STORIES[sIdx];
+  $('s-picker-wrap').style.display = 'none';
+  $('s-reader').style.display = '';
+  $('s-title').innerHTML = s.emoji + ' ' + s.title;
+  $('s-subtitle').textContent = s.subtitle;
+  $('s-toggle-en').textContent = 'Show all English';
+  $('s-panels').innerHTML = s.panels.map((p,pi) => `
+    <div class="panelbox">
+      <span class="panel-num">Panel ${pi+1}</span>
+      <div class="scene">${p.scene}</div>
+      <div class="caption">${p.caption}</div>
+      ${p.bubbles.map(b => `
+        <div class="bubble ${b[1]==='r'?'right':'left'}${b[4]?' thought':''}">
+          <div class="who">${b[0]}${b[4]?' 💭':''}</div>
+          <div class="lt-line">${b[2]} <button class="speak sm" data-say="${b[2].replace(/"/g,'&quot;')}" title="Hear it" aria-label="Hear it">🔊</button></div>
+          <div class="en-line">${b[3]}</div>
+        </div>`).join('')}
+    </div>`).join('');
+  $('s-gloss').innerHTML = s.gloss.map(g =>
+    `<span class="gword"><b>${g[0]}</b> <span>— ${g[1]}</span> <button class="speak sm" data-say="${g[0]}" style="width:24px;height:24px;font-size:0.7rem;" aria-label="Hear it">🔊</button></span>`
+  ).join('');
+  window.scrollTo({ top: $('stories').offsetTop - 20, behavior: 'smooth' });
+}
+$('s-picker').addEventListener('click', e => {
+  const t = e.target.closest('.story-tile');
+  if (t) sOpen(parseInt(t.dataset.i));
+});
+$('s-panels').addEventListener('click', e => {
+  const sp = e.target.closest('button[data-say]');
+  if (sp) { speak(sp.dataset.say, sp); return; }
+  const b = e.target.closest('.bubble');
+  if (b) b.classList.toggle('open');
+});
+$('s-gloss').addEventListener('click', e => {
+  const sp = e.target.closest('button[data-say]');
+  if (sp) speak(sp.dataset.say, sp);
+});
+$('s-back').addEventListener('click', sShowPicker);
+$('s-prev').addEventListener('click', () => sOpen(sIdx - 1));
+$('s-next').addEventListener('click', () => sOpen(sIdx + 1));
+$('s-toggle-en').addEventListener('click', () => {
+  const bubbles = $('s-panels').querySelectorAll('.bubble');
+  const anyClosed = [...bubbles].some(b => !b.classList.contains('open'));
+  bubbles.forEach(b => b.classList.toggle('open', anyClosed));
+  $('s-toggle-en').textContent = anyClosed ? 'Hide all English' : 'Show all English';
+});
+$('s-playall').addEventListener('click', () => {
+  if (sReading) { sReading = false; return; }
+  sReading = true;
+  const lines = STORIES[sIdx].panels.flatMap(p => p.bubbles.map(b => b[2]));
+  let li = 0;
+  const btn = $('s-playall');
+  btn.classList.add('playing');
+  (function next() {
+    if (!sReading || li >= lines.length) { sReading = false; btn.classList.remove('playing'); return; }
+    const text = lines[li++];
+    if (ltVoice) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'lt-LT'; u.voice = ltVoice; u.rate = 0.85;
+      u.onend = () => setTimeout(next, 350);
+      u.onerror = () => setTimeout(next, 350);
+      speechSynthesis.speak(u);
+    } else if (!onlineTtsDead) {
+      speakOnline(text, null, () => setTimeout(next, 350));
+    } else { sReading = false; btn.classList.remove('playing'); }
+  })();
+});
+sShowPicker();
 
 // ---------- BROWSE ----------
 function bRender() {
