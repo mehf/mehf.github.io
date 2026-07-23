@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Learn Lithuanian · Morten Frandsen</title>
 <meta name="description" content="Interactive Lithuanian study page — flashcards, quizzes and matching games for common words, verbs and phrases.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'unsafe-inline'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'unsafe-inline'; media-src 'self' https://translate.google.com; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
 <meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -176,7 +176,7 @@
     <section>
       <div class="tip"><b>Pronunciation tips:</b> <b>č</b> = "ch", <b>š</b> = "sh", <b>ž</b> = "zh", <b>ė</b> = long "eh", <b>ū/ų</b> = long "oo", <b>y/į</b> = long "ee", <b>ai</b> = "eye", <b>ei</b> = "ay". Stress varies — listen to natives when you can!</div>
 
-      <div class="novoice" id="novoice">🔇 No Lithuanian voice found on this device. On desktop Chrome/Edge audio usually works out of the box; on iOS you can add a Lithuanian voice under Settings → Accessibility → Spoken Content → Voices.</div>
+      <div class="novoice" id="novoice">🔇 Audio unavailable: no Lithuanian voice on this device and the online voice couldn't be reached. On iOS you can add one under Settings → Accessibility → Spoken Content → Voices → Lithuanian.</div>
 
       <div class="tabs">
         <button class="tab active" data-panel="flash">🃏 Flashcards</button>
@@ -489,36 +489,44 @@ const $ = id => document.getElementById(id);
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pool = cat => cat === 'all' ? VOCAB : VOCAB.filter(v => v[2] === cat);
 
-// ---------- SPEECH (Web Speech API, lt-LT) ----------
-let ltVoice = null, voicesChecked = false;
+// ---------- SPEECH: local lt-LT voice if available, else online Lithuanian TTS ----------
+// Never falls back to an English voice reading Lithuanian text.
+let ltVoice = null;
 function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
   const vs = speechSynthesis.getVoices();
   if (!vs.length) return;
-  voicesChecked = true;
   ltVoice = vs.find(v => v.lang.toLowerCase().startsWith('lt')) || null;
-  if (!ltVoice) $('novoice').classList.add('show');
-  else $('novoice').classList.remove('show');
 }
 if ('speechSynthesis' in window) {
   pickVoice();
   speechSynthesis.onvoiceschanged = pickVoice;
   setTimeout(pickVoice, 1000);
-} else {
-  $('novoice').classList.add('show');
+}
+let ttsAudio = null, onlineTtsDead = false;
+function speakOnline(text, btn, done) {
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  const a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&tl=lt&client=tw-ob&q=' + encodeURIComponent(text));
+  ttsAudio = a;
+  a.onended = done;
+  a.onerror = () => { onlineTtsDead = true; done(); $('novoice').classList.add('show'); };
+  a.play().catch(() => { onlineTtsDead = true; done(); $('novoice').classList.add('show'); });
 }
 function speak(text, btn) {
-  if (!('speechSynthesis' in window)) return;
-  if (!voicesChecked) pickVoice();
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'lt-LT';
-  if (ltVoice) u.voice = ltVoice;
-  u.rate = 0.85;
-  if (btn) {
-    btn.classList.add('playing');
-    u.onend = u.onerror = () => btn.classList.remove('playing');
+  const done = btn ? (btn.classList.add('playing'), () => btn.classList.remove('playing')) : () => {};
+  if (ltVoice) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'lt-LT';
+    u.voice = ltVoice;
+    u.rate = 0.85;
+    u.onend = u.onerror = done;
+    speechSynthesis.speak(u);
+  } else if (!onlineTtsDead) {
+    speakOnline(text, btn, done);
+  } else {
+    done();
   }
-  speechSynthesis.speak(u);
 }
 
 // Tabs
