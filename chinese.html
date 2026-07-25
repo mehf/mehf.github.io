@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learn Chinese · Morten Frandsen</title>
+<meta name="description" content="Interactive Mandarin study page — flashcards, quizzes and matching games for everyday words, phrases and simple sentences, with pinyin and audio.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'unsafe-inline'; media-src 'self' https://translate.google.com; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+<meta name="referrer" content="no-referrer">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171a23;
+    --text: #e8eaf0;
+    --muted: #9aa1b3;
+    --accent: #6ea8fe;
+    --border: #262a36;
+    --good: #4ade80;
+    --bad: #f87171;
+    --cn-red: #DE2910;
+    --cn-yellow: #FFDE00;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fbfbfd;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --muted: #5c6270;
+      --accent: #2b6ef2;
+      --border: #e6e8ee;
+      --good: #16a34a;
+      --bad: #dc2626;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 24px; }
+  header { padding: 56px 0 28px; }
+  .flag { display: inline-flex; flex-direction: column; width: 42px; height: 27px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+  .flag.cn { background: var(--cn-red); border-color: var(--cn-red); align-items: center; justify-content: center; flex-direction: row; }
+  .flag.cn .star { color: var(--cn-yellow); font-size: 1.15rem; line-height: 1; }
+  h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .tagline { color: var(--muted); font-size: 1.02rem; }
+  .back { display: inline-block; margin-top: 10px; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+  .back:hover { text-decoration: underline; }
+  section { padding: 28px 0; border-top: 1px solid var(--border); }
+  h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 16px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .tab {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    padding: 8px 16px; font-size: 0.92rem; color: var(--text); cursor: pointer;
+    font-family: inherit; transition: border-color .15s, transform .15s;
+  }
+  .tab:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .tab.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; color: var(--muted); font-size: 0.9rem; }
+  .stats b { color: var(--text); }
+  /* Flashcards */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 28px; cursor: pointer; user-select: none;
+    transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card .word { font-size: 2.4rem; font-weight: 700; letter-spacing: 0.04em; }
+  .card .hintcat { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .card .sub { color: var(--muted); margin-top: 10px; font-size: 1.05rem; }
+  .card .flip-hint { color: var(--muted); font-size: 0.8rem; margin-top: 20px; }
+  .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .btn {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 18px; font-size: 0.95rem; font-weight: 500; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s, transform .15s;
+  }
+  .btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .btn.good:hover { border-color: var(--good); }
+  .btn.bad:hover { border-color: var(--bad); }
+  select {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; color: var(--text); font-family: inherit; font-size: 0.92rem;
+  }
+  /* Quiz */
+  .q-word { font-size: 2rem; font-weight: 700; margin: 8px 0 4px; letter-spacing: 0.04em; }
+  .choices { display: grid; gap: 10px; }
+  .choice {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; text-align: left; font-size: 1rem; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s;
+  }
+  .choice:hover { border-color: var(--accent); }
+  .choice.correct { border-color: var(--good); color: var(--good); font-weight: 600; }
+  .choice.wrong { border-color: var(--bad); color: var(--bad); }
+  .choice:disabled { cursor: default; }
+  .feedback { margin-top: 14px; font-size: 0.95rem; min-height: 1.4em; }
+  .feedback.ok { color: var(--good); }
+  .feedback.no { color: var(--bad); }
+  .progressbar { height: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .progressbar div { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+  /* Matching */
+  .match-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media (max-width: 520px) { .match-grid { grid-template-columns: repeat(3, 1fr); } }
+  .mcard {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 8px; min-height: 64px; font-size: 0.95rem; color: var(--text);
+    cursor: pointer; font-family: inherit; transition: border-color .15s, opacity .3s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px;
+  }
+  .mcard:hover { border-color: var(--accent); }
+  .mcard.sel { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .mcard.done { opacity: 0.35; border-color: var(--good); cursor: default; }
+  .mcard.shake { border-color: var(--bad); }
+  .mcard .pysmall { font-size: 0.72rem; color: var(--muted); }
+  /* Browse */
+  .search {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; color: var(--text); font-family: inherit; font-size: 0.95rem; margin-bottom: 14px;
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.94rem; }
+  th { text-align: left; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  td.lt { font-weight: 600; font-size: 1.1rem; white-space: nowrap; }
+  td.py { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+  td.cat { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+  .tip { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--cn-yellow); border-radius: 10px; padding: 14px 16px; font-size: 0.92rem; color: var(--muted); margin-bottom: 18px; }
+  .tip b { color: var(--text); }
+  .speak {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+    width: 38px; height: 38px; font-size: 1rem; cursor: pointer; font-family: inherit;
+    color: var(--text); transition: border-color .15s, transform .15s;
+    display: inline-flex; align-items: center; justify-content: center; flex: none;
+  }
+  .speak:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .speak.sm { width: 30px; height: 30px; font-size: 0.85rem; }
+  .speak.playing { border-color: var(--accent); color: var(--accent); }
+  .novoice { display: none; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--bad); border-radius: 10px; padding: 12px 16px; font-size: 0.88rem; color: var(--muted); margin-bottom: 16px; }
+  .novoice.show { display: block; }
+  .word-row { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  label.autosay { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; color: var(--muted); cursor: pointer; }
+  .vcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+  .vcard h3 { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .vcard .ven { color: var(--muted); font-weight: 400; font-size: 0.95rem; }
+  .vtable { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-top: 10px; }
+  .vtable th { text-align: left; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .vtable td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .vtable tr:last-child td { border-bottom: none; }
+  .vtable td.py { color: var(--muted); white-space: nowrap; font-size: 0.85rem; }
+  .vtable td.ven { color: var(--muted); }
+  .vtable td span.frm { cursor: pointer; border-bottom: 1px dotted var(--border); }
+  .vtable td span.frm:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  /* Comic stories */
+  .story-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 480px) { .story-picker { grid-template-columns: 1fr; } }
+  .story-tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; cursor: pointer; font-family: inherit; text-align: left; color: var(--text);
+    transition: transform .15s, border-color .15s;
+  }
+  .story-tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .story-tile .emoji { font-size: 1.8rem; display: block; margin-bottom: 8px; }
+  .story-tile h3 { font-size: 1.02rem; font-weight: 600; }
+  .story-tile p { color: var(--muted); font-size: 0.85rem; margin: 4px 0 0; }
+  .story-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .story-head h3 { font-size: 1.25rem; font-weight: 700; }
+  .story-sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 14px; }
+  .panelbox {
+    background: var(--surface); border: 2px solid var(--border); border-radius: 14px;
+    padding: 18px; margin-bottom: 16px; position: relative;
+  }
+  .panel-num {
+    position: absolute; top: -11px; left: 14px; background: var(--cn-red); color: #fff;
+    font-size: 0.72rem; font-weight: 700; border-radius: 999px; padding: 2px 10px; letter-spacing: 0.04em;
+  }
+  .scene { font-size: 2.2rem; text-align: center; margin: 6px 0 12px; letter-spacing: 6px; }
+  .caption { color: var(--muted); font-size: 0.85rem; font-style: italic; text-align: center; margin-bottom: 12px; }
+  .bubble {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 16px;
+    padding: 10px 14px; margin: 8px 0; max-width: 85%; cursor: pointer; position: relative;
+    transition: border-color .15s;
+  }
+  .bubble:hover { border-color: var(--accent); }
+  .bubble.right { margin-left: auto; border-bottom-right-radius: 4px; }
+  .bubble.left { margin-right: auto; border-bottom-left-radius: 4px; }
+  .bubble.thought { border-style: dashed; font-style: italic; }
+  .bubble .who { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin-bottom: 2px; }
+  .bubble .lt-line { font-size: 1.15rem; font-weight: 500; }
+  .bubble .en-line { display: none; color: var(--muted); font-size: 0.88rem; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--border); }
+  .bubble.open .en-line { display: block; }
+  .pysmall { color: var(--muted); font-size: 0.85rem; }
+  .story-nav { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .story-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .tap-tip { color: var(--muted); font-size: 0.82rem; margin-bottom: 12px; }
+  .glossary { margin-top: 6px; }
+  .glossary summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+  .glossary div { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .gword { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
+  .gword b { font-weight: 600; }
+  .gword span { color: var(--muted); }
+  footer { padding: 40px 0 64px; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="flag cn"><span class="star">★</span></span>
+      <h1>Learn Chinese</h1>
+      <div class="tagline">学习中文！— Flashcards, quizzes and games for everyday words, phrases and simple sentences. Tap 🔊 to hear Mandarin.</div>
+      <a class="back" href="index.html">← back to mehf.github.io</a>
+    </header>
+
+    <section>
+      <div class="tip"><b>Pronunciation tips:</b> Mandarin is <b>tonal</b> — the same syllable with a different tone is a different word. Tones: <b>1̄</b> high &amp; flat, <b>2́</b> rising, <b>3ˇ</b> dipping, <b>4̀</b> falling. <b>Pinyin</b> shows the spelling + tone mark, so you know how to say each word. Listen and repeat!</div>
+
+      <div class="novoice" id="novoice">🔇 Audio unavailable: no Mandarin voice on this device and the online voice couldn't be reached. On iOS you can add one under Settings → Accessibility → Spoken Content → Voices → Chinese (Mandarin).</div>
+
+      <div class="tabs">
+        <button class="tab active" data-panel="flash">🃏 Flashcards</button>
+        <button class="tab" data-panel="quiz">✅ Quiz</button>
+        <button class="tab" data-panel="match">🧩 Matching</button>
+        <button class="tab" data-panel="sentences">🔤 句型 Sentences</button>
+        <button class="tab" data-panel="stories">📚 Stories</button>
+        <button class="tab" data-panel="browse">📖 Browse all</button>
+      </div>
+
+      <!-- FLASHCARDS -->
+      <div class="panel active" id="flash">
+        <div class="stats">Deck: <b id="f-count">0</b> cards · Known this session: <b id="f-known">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="f-cat"></select>
+          <select id="f-dir">
+            <option value="zh2en">Chinese → English</option>
+            <option value="en2zh">English → Chinese</option>
+          </select>
+        </div>
+        <div class="card" id="f-card">
+          <div class="hintcat" id="f-cardcat"></div>
+          <div class="word-row"><div class="word" id="f-word"></div><button class="speak" id="f-speak" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></div>
+          <div class="sub" id="f-sub"></div>
+          <div class="flip-hint" id="f-hint">tap to flip</div>
+        </div>
+        <div class="row">
+          <button class="btn bad" id="f-again">↺ Again</button>
+          <button class="btn good" id="f-got">✓ Got it</button>
+          <button class="btn" id="f-shuffle">🔀 Shuffle</button>
+          <label class="autosay"><input type="checkbox" id="f-auto"> auto-play 🔊</label>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div class="panel" id="quiz">
+        <div class="stats">Score: <b id="q-score">0</b> / <b id="q-total">0</b> · Streak: <b id="q-streak">0</b> 🔥 · Best: <b id="q-best">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="q-cat"></select>
+          <select id="q-dir">
+            <option value="zh2en">Chinese → English</option>
+            <option value="en2zh">English → Chinese</option>
+          </select>
+        </div>
+        <div class="progressbar"><div id="q-bar"></div></div>
+        <div style="color:var(--muted);font-size:0.85rem;">What does this mean?</div>
+        <div class="word-row" style="justify-content:flex-start;"><div class="q-word" id="q-word" style="margin:0;"></div><button class="speak" id="q-speak" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></div>
+        <div class="sub" id="q-pinyin" style="margin-top:-4px;"></div>
+        <div style="height:18px;"></div>
+        <div class="choices" id="q-choices"></div>
+        <div class="feedback" id="q-feedback"></div>
+      </div>
+
+      <!-- MATCHING -->
+      <div class="panel" id="match">
+        <div class="stats">Pairs found: <b id="m-found">0</b> / <b id="m-total">6</b> · Attempts: <b id="m-tries">0</b></div>
+        <div class="row" style="margin:0 0 14px;">
+          <select id="m-cat"></select>
+          <button class="btn" id="m-new">🔄 New round</button>
+        </div>
+        <div class="match-grid" id="m-grid"></div>
+        <div class="feedback" id="m-feedback"></div>
+      </div>
+
+      <!-- SENTENCE PATTERNS -->
+      <div class="panel" id="sentences">
+        <div class="tip"><b>句型 (Sentence patterns):</b> Mandarin word order is Subject + Verb + Object — like English. Fill the blank with a word from the list to build your own sentence. Tap 🔊 to hear it. (Mandarin verbs don't change for person or tense!)</div>
+        <input class="search" id="x-search" type="search" placeholder="Search patterns… e.g. 我要, want, 水">
+        <div id="x-list"></div>
+      </div>
+
+      <!-- STORIES -->
+      <div class="panel" id="stories">
+        <div id="s-picker-wrap">
+          <div class="tip"><b>漫画故事！</b> Short, silly comic stories in easy Mandarin. Tap any speech bubble to see the English, tap 🔊 to hear it. Pick a story:</div>
+          <div class="story-picker" id="s-picker"></div>
+        </div>
+        <div id="s-reader" style="display:none;">
+          <div class="story-head"><h3 id="s-title"></h3><button class="speak" id="s-playall" title="Play whole story" aria-label="Play whole story">▶️</button></div>
+          <div class="story-sub" id="s-subtitle"></div>
+          <div class="story-tools">
+            <button class="btn" id="s-back">← All stories</button>
+            <button class="btn" id="s-toggle-en">Show all English</button>
+          </div>
+          <div class="tap-tip">💡 Tap a bubble for English · tap 🔊 in a bubble to hear it in Mandarin</div>
+          <div id="s-panels"></div>
+          <details class="glossary"><summary>📖 Key words in this story</summary><div id="s-gloss"></div></details>
+          <div class="story-nav">
+            <button class="btn" id="s-prev">← Previous story</button>
+            <button class="btn" id="s-next">Next story →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BROWSE -->
+      <div class="panel" id="browse">
+        <input class="search" id="b-search" type="search" placeholder="Search words… e.g. 你好, water, 吃">
+        <div class="row" style="margin:0 0 14px;"><select id="b-cat"></select></div>
+        <table>
+          <thead><tr><th>中文</th><th>Pinyin</th><th>English</th><th>Category</th></tr></thead>
+          <tbody id="b-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>加油！(Keep going!) · Built with plain HTML, CSS &amp; JS · <a href="index.html" style="color:var(--accent);">mehf.github.io</a></footer>
+  </div>
+
+<script>
+const VOCAB = [
+  // Greetings & basics
+  ["你好","Hi / Hello","Greetings & Basics","nǐ hǎo"],
+  ["您好","Hello (formal)","Greetings & Basics","nín hǎo"],
+  ["早上好","Good morning","Greetings & Basics","zǎo shang hǎo"],
+  ["下午好","Good afternoon","Greetings & Basics","xià wǔ hǎo"],
+  ["晚上好","Good evening","Greetings & Basics","wǎn shàng hǎo"],
+  ["晚安","Good night","Greetings & Basics","wǎn ān"],
+  ["再见","Goodbye","Greetings & Basics","zài jiàn"],
+  ["拜拜","Bye","Greetings & Basics","bài bài"],
+  ["谢谢","Thank you","Greetings & Basics","xiè xie"],
+  ["非常感谢","Thank you very much","Greetings & Basics","fēi cháng gǎn xiè"],
+  ["不客气","You're welcome","Greetings & Basics","bú kè qi"],
+  ["对不起","Sorry","Greetings & Basics","duì bu qǐ"],
+  ["没关系","It's okay / no problem","Greetings & Basics","méi guān xi"],
+  ["是","Yes","Greetings & Basics","shì"],
+  ["不是","No","Greetings & Basics","bú shì"],
+  ["请","Please","Greetings & Basics","qǐng"],
+  ["好","Good / okay","Greetings & Basics","hǎo"],
+  ["很好","Very good","Greetings & Basics","hěn hǎo"],
+  ["欢迎","Welcome","Greetings & Basics","huān yíng"],
+  ["你好吗？","How are you?","Greetings & Basics","nǐ hǎo ma?"],
+  ["我很好","I'm fine","Greetings & Basics","wǒ hěn hǎo"],
+  ["很高兴认识你","Nice to meet you","Greetings & Basics","hěn gāo xìng rèn shi nǐ"],
+  // Phrases
+  ["我不明白","I don't understand","Phrases","wǒ bù míng bai"],
+  ["我明白","I understand","Phrases","wǒ míng bai"],
+  ["你会说英语吗？","Do you speak English?","Phrases","nǐ huì shuō yīng yǔ ma?"],
+  ["我会一点中文","I speak a little Chinese","Phrases","wǒ huì yī diǎn zhōng wén"],
+  ["这个用中文怎么说？","How do you say this in Chinese?","Phrases","zhè ge yòng zhōng wén zěn me shuō?"],
+  ["请再说一遍","Please repeat","Phrases","qǐng zài shuō yí biàn"],
+  ["请说慢一点","Speak slowly, please","Phrases","qǐng shuō màn yì diǎn"],
+  ["多少钱？","How much does it cost?","Phrases","duō shao qián?"],
+  ["厕所在哪里？","Where is the toilet?","Phrases","cè suǒ zài nǎ lǐ?"],
+  ["我想吃饭","I want to eat","Phrases","wǒ xiǎng chī fàn"],
+  ["我想喝水","I want to drink","Phrases","wǒ xiǎng hē shuǐ"],
+  ["我爱你","I love you","Phrases","wǒ ài nǐ"],
+  ["我喜欢","I like it","Phrases","wǒ xǐ huan"],
+  ["我不喜欢","I don't like it","Phrases","wǒ bù xǐ huan"],
+  ["这是什么？","What is this?","Phrases","zhè shì shén me?"],
+  ["你住在哪里？","Where do you live?","Phrases","nǐ zhù zài nǎ lǐ?"],
+  ["我住香港","I live in Hong Kong","Phrases","wǒ zhù xiāng gǎng"],
+  ["你叫什么名字？","What is your name?","Phrases","nǐ jiào shén me míng zi?"],
+  ["我的名字是…","My name is…","Phrases","wǒ de míng zi shì…"],
+  ["生日快乐","Happy birthday","Phrases","shēng rì kuài lè"],
+  ["干杯！","Cheers!","Phrases","gān bēi!"],
+  ["祝你好运","Good luck","Phrases","zhù nǐ hǎo yùn"],
+  ["一切都好","Everything is fine","Phrases","yí qiè dōu hǎo"],
+  ["请帮帮我","Please help me","Phrases","qǐng bāng bang wǒ"],
+  // Verbs
+  ["吃","to eat","Verbs","chī"],
+  ["喝","to drink","Verbs","hē"],
+  ["去","to go","Verbs","qù"],
+  ["来","to come","Verbs","lái"],
+  ["要","to want","Verbs","yào"],
+  ["会","to be able / can","Verbs","huì"],
+  ["做","to do / to make","Verbs","zuò"],
+  ["说","to say / speak","Verbs","shuō"],
+  ["看","to see / look","Verbs","kàn"],
+  ["听","to hear","Verbs","tīng"],
+  ["读","to read","Verbs","dú"],
+  ["写","to write","Verbs","xiě"],
+  ["学习","to learn / study","Verbs","xué xí"],
+  ["睡觉","to sleep","Verbs","shuì jiào"],
+  ["工作","to work","Verbs","gōng zuò"],
+  ["知道","to know","Verbs","zhī dào"],
+  ["懂","to understand","Verbs","dǒng"],
+  ["爱","to love","Verbs","ài"],
+  ["喜欢","to like","Verbs","xǐ huan"],
+  ["住","to live","Verbs","zhù"],
+  ["给","to give","Verbs","gěi"],
+  ["拿","to take","Verbs","ná"],
+  ["买","to buy","Verbs","mǎi"],
+  ["玩","to play","Verbs","wán"],
+  ["帮","to help","Verbs","bāng"],
+  ["等","to wait","Verbs","děng"],
+  ["跑","to run","Verbs","pǎo"],
+  ["问","to ask","Verbs","wèn"],
+  ["回答","to answer","Verbs","huí dá"],
+  // Family & people
+  ["家","family / home","Family & People","jiā"],
+  ["妈妈","mom","Family & People","mā ma"],
+  ["爸爸","dad","Family & People","bà ba"],
+  ["儿子","son","Family & People","ér zi"],
+  ["女儿","daughter","Family & People","nǚ ér"],
+  ["孩子","child","Family & People","hái zi"],
+  ["哥哥","older brother","Family & People","gē ge"],
+  ["姐姐","older sister","Family & People","jiě jie"],
+  ["弟弟","younger brother","Family & People","dì di"],
+  ["妹妹","younger sister","Family & People","mèi mei"],
+  ["爷爷","grandfather","Family & People","yé ye"],
+  ["奶奶","grandmother","Family & People","nǎi nai"],
+  ["男人","man","Family & People","nán rén"],
+  ["女人","woman","Family & People","nǚ rén"],
+  ["妻子","wife","Family & People","qī zi"],
+  ["丈夫","husband","Family & People","zhàng fu"],
+  ["朋友","friend","Family & People","péng you"],
+  ["男孩","boy","Family & People","nán hái"],
+  ["女孩","girl","Family & People","nǚ hái"],
+  // Food & drink
+  ["米饭","rice","Food & Drink","mǐ fàn"],
+  ["面包","bread","Food & Drink","miàn bāo"],
+  ["水","water","Food & Drink","shuǐ"],
+  ["牛奶","milk","Food & Drink","niú nǎi"],
+  ["咖啡","coffee","Food & Drink","kā fēi"],
+  ["茶","tea","Food & Drink","chá"],
+  ["啤酒","beer","Food & Drink","pí jiǔ"],
+  ["苹果","apple","Food & Drink","píng guǒ"],
+  ["香蕉","banana","Food & Drink","xiāng jiāo"],
+  ["鸡蛋","egg","Food & Drink","jī dàn"],
+  ["肉","meat","Food & Drink","ròu"],
+  ["鱼","fish","Food & Drink","yú"],
+  ["蔬菜","vegetables","Food & Drink","shū cài"],
+  ["水果","fruit","Food & Drink","shuǐ guǒ"],
+  ["糖","sugar","Food & Drink","táng"],
+  ["盐","salt","Food & Drink","yán"],
+  ["早餐","breakfast","Food & Drink","zǎo cān"],
+  ["午餐","lunch","Food & Drink","wǔ cān"],
+  ["晚餐","dinner","Food & Drink","wǎn cān"],
+  ["冰淇淋","ice cream","Food & Drink","bīng qí lín"],
+  // Numbers
+  ["一","one","Numbers","yī"],
+  ["二","two","Numbers","èr"],
+  ["三","three","Numbers","sān"],
+  ["四","four","Numbers","sì"],
+  ["五","five","Numbers","wǔ"],
+  ["六","six","Numbers","liù"],
+  ["七","seven","Numbers","qī"],
+  ["八","eight","Numbers","bā"],
+  ["九","nine","Numbers","jiǔ"],
+  ["十","ten","Numbers","shí"],
+  ["二十","twenty","Numbers","èr shí"],
+  ["一百","one hundred","Numbers","yì bǎi"],
+  ["一千","one thousand","Numbers","yì qiān"],
+  // Time & days
+  ["天","day","Time","tiān"],
+  ["白天","daytime","Time","bái tiān"],
+  ["晚上","evening / night","Time","wǎn shàng"],
+  ["早上","morning","Time","zǎo shàng"],
+  ["今天","today","Time","jīn tiān"],
+  ["明天","tomorrow","Time","míng tiān"],
+  ["昨天","yesterday","Time","zuó tiān"],
+  ["现在","now","Time","xiàn zài"],
+  ["星期","week","Time","xīng qī"],
+  ["月","month / moon","Time","yuè"],
+  ["年","year","Time","nián"],
+  ["星期一","Monday","Time","xīng qī yī"],
+  ["星期二","Tuesday","Time","xīng qī èr"],
+  ["星期三","Wednesday","Time","xīng qī sān"],
+  ["星期四","Thursday","Time","xīng qī sì"],
+  ["星期五","Friday","Time","xīng qī wǔ"],
+  ["星期六","Saturday","Time","xīng qī liù"],
+  ["星期日","Sunday","Time","xīng qī rì"],
+  ["小时","hour","Time","xiǎo shí"],
+  ["分钟","minute","Time","fēn zhōng"],
+  // Animals & nature
+  ["狗","dog","Animals & Nature","gǒu"],
+  ["猫","cat","Animals & Nature","māo"],
+  ["鸟","bird","Animals & Nature","niǎo"],
+  ["太阳","sun","Animals & Nature","tài yáng"],
+  ["雨","rain","Animals & Nature","yǔ"],
+  ["雪","snow","Animals & Nature","xuě"],
+  ["海","sea","Animals & Nature","hǎi"],
+  ["树","tree","Animals & Nature","shù"],
+  ["花","flower","Animals & Nature","huā"],
+  // Everyday things
+  ["房子","house","Everyday Things","fáng zi"],
+  ["公寓","apartment","Everyday Things","gōng yù"],
+  ["城市","city","Everyday Things","chéng shì"],
+  ["街","street","Everyday Things","jiē"],
+  ["商店","shop / store","Everyday Things","shāng diàn"],
+  ["学校","school","Everyday Things","xué xiào"],
+  ["书","book","Everyday Things","shū"],
+  ["电话","phone","Everyday Things","diàn huà"],
+  ["车","car","Everyday Things","chē"],
+  ["公共汽车","bus","Everyday Things","gōng gòng qì chē"],
+  ["火车","train","Everyday Things","huǒ chē"],
+  ["飞机","airplane","Everyday Things","fēi jī"],
+  ["机场","airport","Everyday Things","jī chǎng"],
+  ["钱","money","Everyday Things","qián"],
+  ["钥匙","key","Everyday Things","yào shi"],
+  ["门","door","Everyday Things","mén"],
+  ["窗","window","Everyday Things","chuāng"],
+  ["桌子","table","Everyday Things","zhuō zi"],
+  ["椅子","chair","Everyday Things","yǐ zi"],
+  ["床","bed","Everyday Things","chuáng"],
+  // Colors & adjectives
+  ["大","big","Colors & Adjectives","dà"],
+  ["小","small","Colors & Adjectives","xiǎo"],
+  ["漂亮","beautiful","Colors & Adjectives","piào liang"],
+  ["新","new","Colors & Adjectives","xīn"],
+  ["老","old","Colors & Adjectives","lǎo"],
+  ["热","hot","Colors & Adjectives","rè"],
+  ["冷","cold","Colors & Adjectives","lěng"],
+  ["快","fast","Colors & Adjectives","kuài"],
+  ["慢","slow","Colors & Adjectives","màn"],
+  ["高兴","happy","Colors & Adjectives","gāo xìng"],
+  ["好吃","tasty / delicious","Colors & Adjectives","hǎo chī"],
+  ["贵","expensive","Colors & Adjectives","guì"],
+  ["便宜","cheap","Colors & Adjectives","pián yi"],
+  ["红","red","Colors & Adjectives","hóng"],
+  ["黄","yellow","Colors & Adjectives","huáng"],
+  ["蓝","blue","Colors & Adjectives","lán"],
+  ["绿","green","Colors & Adjectives","lǜ"],
+  ["白","white","Colors & Adjectives","bái"],
+  ["黑","black","Colors & Adjectives","hēi"],
+  ["这里","here","Colors & Adjectives","zhè lǐ"],
+  ["那里","there","Colors & Adjectives","nà lǐ"],
+  ["多","a lot / many","Colors & Adjectives","duō"],
+  ["少","a little / few","Colors & Adjectives","shǎo"]
+];
+
+const CATS = [...new Set(VOCAB.map(v => v[2]))];
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pool = cat => cat === 'all' ? VOCAB : VOCAB.filter(v => v[2] === cat);
+
+// ---------- SPEECH: local zh-CN voice if available, else online Mandarin TTS ----------
+// Never falls back to an English voice reading Chinese text.
+let zhVoice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  if (!vs.length) return;
+  zhVoice = vs.find(v => v.lang.toLowerCase().startsWith('zh')) || null;
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+  setTimeout(pickVoice, 1000);
+}
+let ttsAudio = null, onlineTtsDead = false;
+function speakOnline(text, btn, done) {
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  const a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=' + encodeURIComponent(text));
+  ttsAudio = a;
+  a.onended = done;
+  a.onerror = () => { onlineTtsDead = true; done(); $('novoice').classList.add('show'); };
+  a.play().catch(() => { onlineTtsDead = true; done(); $('novoice').classList.add('show'); });
+}
+function speak(text, btn) {
+  const done = btn ? (btn.classList.add('playing'), () => btn.classList.remove('playing')) : () => {};
+  if (zhVoice) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.voice = zhVoice;
+    u.rate = 0.85;
+    u.onend = u.onerror = done;
+    speechSynthesis.speak(u);
+  } else if (!onlineTtsDead) {
+    speakOnline(text, btn, done);
+  } else {
+    done();
+  }
+}
+
+// Tabs
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $(t.dataset.panel).classList.add('active');
+  }));
+});
+
+// Category selects
+['f-cat','q-cat','m-cat','b-cat'].forEach(id => {
+  const s = $(id);
+  s.innerHTML = '<option value="all">All categories</option>' + CATS.map(c => `<option>${c}</option>`).join('');
+});
+
+// ---------- FLASHCARDS ----------
+let fDeck = [], fIdx = 0, fFlipped = false, fKnown = 0;
+function fBuild() {
+  fDeck = shuffle(pool($('f-cat').value));
+  fIdx = 0; fFlipped = false;
+  $('f-count').textContent = fDeck.length;
+  fShow();
+}
+function fShow() {
+  const c = fDeck[fIdx]; if (!c) return;
+  const zh2en = $('f-dir').value === 'zh2en';
+  $('f-cardcat').textContent = c[2] + ' · ' + (fIdx + 1) + '/' + fDeck.length;
+  $('f-word').textContent = fFlipped ? (zh2en ? c[1] : c[0]) : (zh2en ? c[0] : c[1]);
+  const showingZh = fFlipped !== ($('f-dir').value === 'zh2en');
+  $('f-sub').textContent = showingZh ? c[3] : '';
+  $('f-hint').textContent = fFlipped ? 'tap to flip back' : 'tap to flip';
+  if ($('f-auto').checked && showingZh) speak(c[0], $('f-speak'));
+}
+$('f-card').addEventListener('click', () => { fFlipped = !fFlipped; fShow(); });
+$('f-speak').addEventListener('click', e => { e.stopPropagation(); const c = fDeck[fIdx]; if (c) speak(c[0], $('f-speak')); });
+function fNext() { fIdx = (fIdx + 1) % fDeck.length; fFlipped = false; fShow(); }
+$('f-got').addEventListener('click', () => { fKnown++; $('f-known').textContent = fKnown; fNext(); });
+$('f-again').addEventListener('click', () => { fDeck.push(fDeck[fIdx]); $('f-count').textContent = fDeck.length; fNext(); });
+$('f-shuffle').addEventListener('click', fBuild);
+$('f-cat').addEventListener('change', fBuild);
+$('f-dir').addEventListener('change', () => { fFlipped = false; fShow(); });
+fBuild();
+
+// ---------- QUIZ ----------
+let qScore = 0, qTotal = 0, qStreak = 0, qBest = 0, qAnswer = null, qLocked = false;
+try { qBest = parseInt(localStorage.getItem('zh-best') || '0'); } catch(e) {}
+$('q-best').textContent = qBest;
+function qNext() {
+  qLocked = false;
+  $('q-feedback').textContent = ''; $('q-feedback').className = 'feedback';
+  const p = pool($('q-cat').value);
+  const zh2en = $('q-dir').value === 'zh2en';
+  const picks = shuffle(p).slice(0, 4);
+  qAnswer = picks[0];
+  $('q-word').textContent = zh2en ? qAnswer[0] : qAnswer[1];
+  $('q-pinyin').textContent = zh2en ? qAnswer[3] : '';
+  const box = $('q-choices'); box.innerHTML = '';
+  shuffle(picks).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = zh2en ? c[1] : c[0];
+    b.addEventListener('click', () => qPick(b, c));
+    box.appendChild(b);
+  });
+}
+function qPick(btn, c) {
+  if (qLocked) return; qLocked = true;
+  qTotal++;
+  const zh2en = $('q-dir').value === 'zh2en';
+  const correct = c === qAnswer;
+  if (correct) {
+    btn.classList.add('correct'); qScore++; qStreak++;
+    if (qStreak > qBest) { qBest = qStreak; try { localStorage.setItem('zh-best', qBest); } catch(e) {} }
+    $('q-feedback').textContent = '对！(Correct!) 🎉'; $('q-feedback').className = 'feedback ok';
+  } else {
+    btn.classList.add('wrong'); qStreak = 0;
+    [...$('q-choices').children].forEach(b => { if (b.textContent === (zh2en ? qAnswer[1] : qAnswer[0])) b.classList.add('correct'); });
+    $('q-feedback').textContent = '不对 — "' + qAnswer[0] + '" (' + qAnswer[3] + ') means "' + qAnswer[1] + '".'; $('q-feedback').className = 'feedback no';
+  }
+  [...$('q-choices').children].forEach(b => b.disabled = true);
+  $('q-score').textContent = qScore; $('q-total').textContent = qTotal;
+  $('q-streak').textContent = qStreak; $('q-best').textContent = qBest;
+  $('q-bar').style.width = (qTotal ? Math.round(qScore / qTotal * 100) : 0) + '%';
+  setTimeout(qNext, correct ? 900 : 1900);
+}
+$('q-speak').addEventListener('click', () => { if (qAnswer) speak(qAnswer[0], $('q-speak')); });
+$('q-cat').addEventListener('change', qNext);
+$('q-dir').addEventListener('change', qNext);
+qNext();
+
+// ---------- MATCHING ----------
+let mSel = null, mFound = 0, mTries = 0;
+function mNew() {
+  mSel = null; mFound = 0; mTries = 0;
+  $('m-found').textContent = 0; $('m-tries').textContent = 0; $('m-feedback').textContent = '';
+  const pairs = shuffle(pool($('m-cat').value)).slice(0, 6);
+  $('m-total').textContent = pairs.length;
+  const cards = shuffle(pairs.flatMap((p, i) => [
+    { zh: p[0], py: p[3], en: p[1], id: i, isZh: true },
+    { zh: p[0], en: p[1], id: i, isZh: false }
+  ]));
+  const grid = $('m-grid'); grid.innerHTML = '';
+  cards.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'mcard'; b.dataset.id = c.id; b.dataset.lt = c.zh;
+    if (c.isZh) {
+      b.innerHTML = c.zh + '<span class="pysmall">' + c.py + '</span>';
+    } else {
+      b.textContent = c.en;
+    }
+    b.addEventListener('click', () => mPick(b));
+    grid.appendChild(b);
+  });
+}
+function mPick(b) {
+  if (b.classList.contains('done') || b === mSel) return;
+  if (!mSel) { mSel = b; b.classList.add('sel'); return; }
+  mTries++; $('m-tries').textContent = mTries;
+  const a = mSel; mSel = null; a.classList.remove('sel');
+  if (a.dataset.id === b.dataset.id) {
+    a.classList.add('done'); b.classList.add('done');
+    speak(a.dataset.lt);
+    mFound++; $('m-found').textContent = mFound;
+    if (mFound === parseInt($('m-total').textContent)) {
+      $('m-feedback').textContent = '太棒了！All pairs matched in ' + mTries + ' attempts 🏆';
+      $('m-feedback').className = 'feedback ok';
+    }
+  } else {
+    a.classList.add('shake'); b.classList.add('shake');
+    setTimeout(() => { a.classList.remove('shake'); b.classList.remove('shake'); }, 500);
+  }
+}
+$('m-new').addEventListener('click', mNew);
+$('m-cat').addEventListener('change', mNew);
+mNew();
+
+// ---------- SENTENCE PATTERNS (句型) ----------
+// SENTENCES[i] = [zhPattern, pinyinPattern, englishMeaning, [ [zh, pinyin, en], ...examples ]]
+const SENTENCES = [
+  ["我要 ___","wǒ yào ___","I want ___",[
+    ["水","shuǐ","water"],["苹果","píng guǒ","apple"],["睡觉","shuì jiào","to sleep"],["冰淇淋","bīng qí lín","ice cream"]
+  ]],
+  ["这是 ___","zhè shì ___","This is ___",[
+    ["猫","māo","cat"],["狗","gǒu","dog"],["书","shū","book"],["妈妈","mā ma","mom"]
+  ]],
+  ["我喜欢 ___","wǒ xǐ huan ___","I like ___",[
+    ["狗","gǒu","dog"],["冰淇淋","bīng qí lín","ice cream"],["画画","huà huà","drawing"]
+  ]],
+  ["你有 ___ 吗？","nǐ yǒu ___ ma？","Do you have ___?",[
+    ["猫","māo","a cat"],["哥哥","gē ge","an older brother"],["书","shū","a book"]
+  ]],
+  ["___ 在哪里？","___ zài nǎ lǐ？","Where is ___?",[
+    ["厕所","cè suǒ","the toilet"],["妈妈","mā ma","mom"],["学校","xué xiào","school"]
+  ]],
+  ["我不 ___","wǒ bù ___","I don't ___",[
+    ["吃","chī","eat"],["喝","hē","drink"],["明白","míng bai","understand"]
+  ]]
+];
+const xList = $('x-list');
+function xRender() {
+  const q = $('x-search').value.toLowerCase().trim();
+  xList.innerHTML = SENTENCES.filter(s =>
+    !q || s[0].includes(q) || s[1].includes(q) || s[2].toLowerCase().includes(q) ||
+    s[3].some(ex => ex[0].includes(q) || ex[1].includes(q) || ex[2].toLowerCase().includes(q))
+  ).map(s => `
+    <div class="vcard">
+      <h3><span class="frm" data-say="${s[0]}">${s[0]}</span> <span class="ven">${s[2]}</span> <button class="speak sm" data-say="${s[0]}" title="Hear it" aria-label="Hear it">🔊</button></h3>
+      <div class="pysmall" style="margin:2px 0 8px;">${s[1]}</div>
+      <table class="vtable">
+        <tbody>
+          ${s[3].map(ex => `<tr><td><span class="frm" data-say="${ex[0]}">${ex[0]}</span></td><td class="py">${ex[1]}</td><td class="ven">${ex[2]}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('') || '<div style="color:var(--muted);">No patterns found — 没有找到。</div>';
+}
+$('x-list').addEventListener('click', e => {
+  const el = e.target.closest('[data-say]');
+  if (el) speak(el.dataset.say, el.classList.contains('speak') ? el : null);
+});
+$('x-search').addEventListener('input', xRender);
+xRender();
+
+// ---------- COMIC STORIES ----------
+// bubble: [who, side(l/r/c), zh, pinyin, en, thought?]
+const STORIES = [
+{
+  emoji: "🐱", title: "小猫的气球", subtitle: "The kitten's balloon",
+  teaser: "A little cat has a red balloon. Then the wind comes.",
+  gloss: [["气球","qì qiú","balloon"],["猫","māo","cat"],["红色","hóng sè","red"],["飞","fēi","to fly"],["哭","kū","to cry"]],
+  panels: [
+    { scene:"🐱🎈", caption:"一只小猫有一个红色的气球。(A little cat has a red balloon.)",
+      bubbles:[
+        ["小猫","l","我有红气球！","wǒ yǒu hóng qì qiú!","I have a red balloon!"],
+        ["小鸟","r","哇！好看！","wa! hǎo kàn!","Wow! So pretty!"]
+      ]},
+    { scene:"💨🎈😱", caption:"风来了，气球飞走了。(The wind comes and the balloon flies away.)",
+      bubbles:[
+        ["小猫","l","我的气球！","wǒ de qì qiú!","My balloon!"],
+        ["小鸟","r","它飞走了！","tā fēi zǒu le!","It flew away!"],
+        ["小猫","l","呜呜…","wū wū…","Waaah…",true]
+      ]},
+    { scene:"🎈🐱😊", caption:"小鸟带来一个新气球。(The bird brings a new balloon.)",
+      bubbles:[
+        ["小鸟","r","给你蓝气球！","gěi nǐ lán qì qiú!","Here, a blue balloon!"],
+        ["小猫","l","谢谢！我喜欢！","xiè xie! wǒ xǐ huan!","Thank you! I like it!"]
+      ]}
+  ]
+},
+{
+  emoji: "🍦", title: "我要冰淇淋", subtitle: "I want ice cream",
+  teaser: "It's hot. A child wants ice cream. Dad says yes.",
+  gloss: [["冰淇淋","bīng qí lín","ice cream"],[["热","rè","hot"]],[["买","mǎi","to buy"]],[["好吃","hǎo chī","delicious"]],[["爸爸","bà ba","dad"]]],
+  panels: [
+    { scene:"☀️🥵👦", caption:"天气很热。(The weather is very hot.)",
+      bubbles:[
+        ["孩子","l","爸爸，我热！","bà ba, wǒ rè!","Dad, I'm hot!"],
+        ["爸爸","r","我们也热。","wǒ men yě rè.","We are hot too."]
+      ]},
+    { scene:"🍦🏪", caption:"我们看到冰淇淋店。(We see an ice cream shop.)",
+      bubbles:[
+        ["孩子","l","我要冰淇淋！","wǒ yào bīng qí lín!","I want ice cream!"],
+        ["爸爸","r","好，我们买。","hǎo, wǒ men mǎi.","OK, we'll buy some."],
+        ["孩子","l","两个！","liǎng gè!","Two!"]
+      ]},
+    { scene:"🍦😋", caption:"冰淇淋很好吃。(The ice cream is delicious.)",
+      bubbles:[
+        ["孩子","l","好吃！谢谢爸爸！","hǎo chī! xiè xie bà ba!","Yummy! Thank you, Dad!"],
+        ["爸爸","r","慢慢吃。","màn man chī.","Eat slowly."]
+      ]}
+  ]
+},
+{
+  emoji: "🐶", title: "小狗在哪里？", subtitle: "Where is the dog?",
+  teaser: "A little boy looks for his dog. Under the table? Under the bed?",
+  gloss: [["狗","gǒu","dog"],[["哪里","nǎ lǐ","where"]],[["桌子","zhuō zi","table"]],[["下面","xià miàn","under"]],[["找","zhǎo","to look for"]]],
+  panels: [
+    { scene:"🐶❓", caption:"小男孩找小狗。(A little boy looks for the dog.)",
+      bubbles:[
+        ["男孩","l","小狗在哪里？","xiǎo gǒu zài nǎ lǐ?","Where is the little dog?"],
+        ["女孩","r","我不知道。","wǒ bù zhī dào.","I don't know."]
+      ]},
+    { scene:"🔍🛋️", caption:"他们找啊找。(They look and look.)",
+      bubbles:[
+        ["男孩","l","在桌子下面吗？","zài zhuō zi xià miàn ma?","Is it under the table?"],
+        ["女孩","r","不在。","bú zài.","It's not."],
+        ["男孩","l","在床下面？","zài chuáng xià miàn?","Under the bed?",true]
+      ]},
+    { scene:"🛏️🐶😄", caption:"小狗在床下面！(The dog is under the bed!)",
+      bubbles:[
+        ["女孩","r","找到了！","zhǎo dào le!","Found it!"],
+        ["男孩","l","哈哈，坏小狗！","hā hā, huài xiǎo gǒu!","Haha, naughty dog!"]
+      ]}
+  ]
+},
+{
+  emoji: "🌈", title: "颜色", subtitle: "Colors",
+  teaser: "Mom teaches a child the colors. Red, yellow, blue and green!",
+  gloss: [["颜色","yán sè","color"],[["红色","hóng sè","red"]],[["黄色","huáng sè","yellow"]],[["蓝色","lán sè","blue"]],[["绿色","lǜ sè","green"]]],
+  panels: [
+    { scene:"🍎🔴", caption:"妈妈拿出一个红苹果。(Mom holds up a red apple.)",
+      bubbles:[
+        ["妈妈","l","这是什么颜色？","zhè shì shén me yán sè?","What color is this?"],
+        ["孩子","r","红色！","hóng sè!","Red!"]
+      ]},
+    { scene:"🌟🟡", caption:"太阳是黄色的。(The sun is yellow.)",
+      bubbles:[
+        ["妈妈","l","太阳是什么颜色？","tài yáng shì shén me yán sè?","What color is the sun?"],
+        ["孩子","r","黄色！","huáng sè!","Yellow!"]
+      ]},
+    { scene:"🌈", caption:"天空是蓝色的，草是绿色的。(The sky is blue, the grass is green.)",
+      bubbles:[
+        ["妈妈","l","天空和草呢？","tiān kōng hé cǎo ne?","And the sky and grass?"],
+        ["孩子","r","蓝和绿！","lán hé lǜ!","Blue and green!"],
+        ["妈妈","l","真聪明！","zhēn cōng ming!","So smart!"]
+      ]}
+  ]
+}
+];
+
+let sIdx = -1, sReading = false;
+function sShowPicker() {
+  sReading = false;
+  speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
+  if (ttsAudio) { ttsAudio.pause(); ttsAudio = null; }
+  $('s-picker-wrap').style.display = '';
+  $('s-reader').style.display = 'none';
+  $('s-picker').innerHTML = STORIES.map((s,i) =>
+    `<button class="story-tile" data-i="${i}"><span class="emoji">${s.emoji}</span><h3>${s.title}</h3><p>${s.teaser}</p></button>`
+  ).join('');
+}
+function sOpen(i) {
+  sIdx = (i + STORIES.length) % STORIES.length;
+  const s = STORIES[sIdx];
+  $('s-picker-wrap').style.display = 'none';
+  $('s-reader').style.display = '';
+  $('s-title').innerHTML = s.emoji + ' ' + s.title;
+  $('s-subtitle').textContent = s.subtitle;
+  $('s-toggle-en').textContent = 'Show all English';
+  $('s-panels').innerHTML = s.panels.map((p,pi) => `
+    <div class="panelbox">
+      <span class="panel-num">Panel ${pi+1}</span>
+      <div class="scene">${p.scene}</div>
+      <div class="caption">${p.caption}</div>
+      ${p.bubbles.map(b => `
+        <div class="bubble ${b[1]==='r'?'right':'left'}${b[5]?' thought':''}">
+          <div class="who">${b[0]}${b[5]?' 💭':''}</div>
+          <div class="lt-line">${b[2]} <span class="pysmall">${b[3]}</span> <button class="speak sm" data-say="${b[2].replace(/"/g,'&quot;')}" title="Hear it" aria-label="Hear it">🔊</button></div>
+          <div class="en-line">${b[4]}</div>
+        </div>`).join('')}
+    </div>`).join('');
+  $('s-gloss').innerHTML = s.gloss.map(g =>
+    `<span class="gword"><b>${g[0]}</b> <span class="pysmall">${g[1]}</span> <span>— ${g[2]}</span> <button class="speak sm" data-say="${g[0]}" style="width:24px;height:24px;font-size:0.7rem;" aria-label="Hear it">🔊</button></span>`
+  ).join('');
+  window.scrollTo({ top: $('stories').offsetTop - 20, behavior: 'smooth' });
+}
+$('s-picker').addEventListener('click', e => {
+  const t = e.target.closest('.story-tile');
+  if (t) sOpen(parseInt(t.dataset.i));
+});
+$('s-panels').addEventListener('click', e => {
+  const sp = e.target.closest('button[data-say]');
+  if (sp) { speak(sp.dataset.say, sp); return; }
+  const b = e.target.closest('.bubble');
+  if (b) b.classList.toggle('open');
+});
+$('s-gloss').addEventListener('click', e => {
+  const sp = e.target.closest('button[data-say]');
+  if (sp) speak(sp.dataset.say, sp);
+});
+$('s-back').addEventListener('click', sShowPicker);
+$('s-prev').addEventListener('click', () => sOpen(sIdx - 1));
+$('s-next').addEventListener('click', () => sOpen(sIdx + 1));
+$('s-toggle-en').addEventListener('click', () => {
+  const bubbles = $('s-panels').querySelectorAll('.bubble');
+  const anyClosed = [...bubbles].some(b => !b.classList.contains('open'));
+  bubbles.forEach(b => b.classList.toggle('open', anyClosed));
+  $('s-toggle-en').textContent = anyClosed ? 'Hide all English' : 'Show all English';
+});
+$('s-playall').addEventListener('click', () => {
+  if (sReading) { sReading = false; return; }
+  sReading = true;
+  const lines = STORIES[sIdx].panels.flatMap(p => p.bubbles.map(b => b[2]));
+  let li = 0;
+  const btn = $('s-playall');
+  btn.classList.add('playing');
+  (function next() {
+    if (!sReading || li >= lines.length) { sReading = false; btn.classList.remove('playing'); return; }
+    const text = lines[li++];
+    if (zhVoice) {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN'; u.voice = zhVoice; u.rate = 0.85;
+      u.onend = () => setTimeout(next, 350);
+      u.onerror = () => setTimeout(next, 350);
+      speechSynthesis.speak(u);
+    } else if (!onlineTtsDead) {
+      speakOnline(text, null, () => setTimeout(next, 350));
+    } else { sReading = false; btn.classList.remove('playing'); }
+  })();
+});
+sShowPicker();
+
+// ---------- BROWSE ----------
+function bRender() {
+  const q = $('b-search').value.toLowerCase().trim();
+  const cat = $('b-cat').value;
+  const rows = VOCAB.filter(v =>
+    (cat === 'all' || v[2] === cat) &&
+    (!q || v[0].includes(q) || v[1].toLowerCase().includes(q) || v[3].toLowerCase().includes(q))
+  );
+  $('b-body').innerHTML = rows.map(v =>
+    `<tr><td class="lt">${v[0]} <button class="speak sm" data-say="${v[0].replace(/"/g,'&quot;')}" title="Hear pronunciation" aria-label="Hear pronunciation">🔊</button></td><td class="py">${v[3]}</td><td>${v[1]}</td><td class="cat">${v[2]}</td></tr>`
+  ).join('') || '<tr><td colspan="4" style="color:var(--muted);">No matches — 没有找到。</td></tr>';
+}
+$('b-body').addEventListener('click', e => {
+  const b = e.target.closest('button[data-say]');
+  if (b) speak(b.dataset.say, b);
+});
+$('b-search').addEventListener('input', bRender);
+$('b-cat').addEventListener('change', bRender);
+bRender();
+</script>
+</body>
+</html>
