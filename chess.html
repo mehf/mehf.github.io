@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            margin: 20px 0;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
+        .white {
+            background-color: #f0d9b5;
+        }
+
+        .black {
+            background-color: #b58863;
+        }
+
+        .piece {
+            cursor: pointer;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Chess Game</h1>
+        <div class="board" id="chessboard"></div>
+        <div class="controls">
+            <button id="newGameBtn">New Game</button>
+            <select id="playerColor">
+                <option value="white">Play as White</option>
+                <option value="black">Play as Black</option>
+            </select>
+            <select id="opponentStrength">
+                <option value="1">Opponent Strength: 1</option>
+                <option value="2">Opponent Strength: 2</option>
+                <option value="3">Opponent Strength: 3</option>
+                <option value="4">Opponent Strength: 4</option>
+                <option value="5">Opponent Strength: 5</option>
+                <option value="6">Opponent Strength: 6</option>
+                <option value="7">Opponent Strength: 7</option>
+                <option value="8">Opponent Strength: 8</option>
+                <option value="9">Opponent Strength: 9</option>
+                <option value="10">Opponent Strength: 10</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        // Game variables
+        let board = [];
+        let selectedPiece = null;
+        let playerColor = 'white';
+        let opponentStrength = 5;
+
+        // Initialize the game
+        function initGame() {
+            // Create the chess board
+            const chessboard = document.getElementById('chessboard');
+            chessboard.innerHTML = '';
+
+            // Reset the board array
+            board = [];
+
+            // Create squares and pieces
+            for (let row = 0; row < 8; row++) {
+                board[row] = [];
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(row + col) % 2 === 0 ? 'white' : 'black'}`;
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+
+                    // Add pieces to the board
+                    if (row === 0 || row === 7) {
+                        // Black pieces
+                        if (row === 0) {
+                            if (col === 0 || col === 7) square.innerHTML = '♜';
+                            else if (col === 1 || col === 6) square.innerHTML = '♞';
+                            else if (col === 2 || col === 5) square.innerHTML = '♝';
+                            else if (col === 3) square.innerHTML = '♛';
+                            else if (col === 4) square.innerHTML = '♚';
+                        } else {
+                            // White pieces
+                            if (col === 0 || col === 7) square.innerHTML = '♖';
+                            else if (col === 1 || col === 6) square.innerHTML = '♘';
+                            else if (col === 2 || col === 5) square.innerHTML = '♗';
+                            else if (col === 3) square.innerHTML = '♕';
+                            else if (col === 4) square.innerHTML = '♔';
+                        }
+                    } else if (row === 1 || row === 6) {
+                        // Pawns
+                        square.innerHTML = row === 1 ? '♙' : '♟';
+                    }
+
+                    // Store piece information
+                    board[row][col] = {
+                        piece: square.innerHTML,
+                        color: row < 2 ? 'black' : row > 5 ? 'white' : null
+                    };
+
+                    // Add event listeners
+                    square.addEventListener('click', handleSquareClick);
+                    chessboard.appendChild(square);
+                }
+            }
+        }
+
+        // Handle square clicks
+        function handleSquareClick(event) {
+            const square = event.target;
+            const row = parseInt(square.dataset.row);
+            const col = parseInt(square.dataset.col);
+
+            if (selectedPiece) {
+                // Move the piece
+                movePiece(selectedPiece.row, selectedPiece.col, row, col);
+                selectedPiece = null;
+                // After player moves, let the computer move
+                setTimeout(makeComputerMove, 500);
+            } else if (board[row][col].piece && board[row][col].color === playerColor) {
+                // Select a piece
+                selectedPiece = { row, col };
+                square.style.backgroundColor = '#a0d8a0';
+            }
+        }
+
+        // Move a piece
+        function movePiece(fromRow, fromCol, toRow, toCol) {
+            // Check if the move is valid (simplified for this example)
+            if (isValidMove(fromRow, fromCol, toRow, toCol)) {
+                // Update the board
+                board[toRow][toCol] = board[fromRow][fromCol];
+                board[fromRow][fromCol] = { piece: '', color: null };
+
+                // Update the display
+                updateBoardDisplay();
+            }
+        }
+
+        // Check if a move is valid (simplified)
+        function isValidMove(fromRow, fromCol, toRow, toCol) {
+            // In a real implementation, this would check for valid chess moves
+            // For this example, we'll allow any move to an empty square
+            return board[toRow][toCol].piece === '';
+        }
+
+        // Update the board display
+        function updateBoardDisplay() {
+            const squares = document.querySelectorAll('.square');
+            squares.forEach(square => {
+                const row = parseInt(square.dataset.row);
+                const col = parseInt(square.dataset.col);
+                square.innerHTML = board[row][col].piece;
+                square.style.backgroundColor = (row + col) % 2 === 0 ? '#f0d9b5' : '#b58863';
+            });
+        }
+
+        // Make a computer move (simplified)
+        function makeComputerMove() {
+            // Find all possible moves for the computer
+            const computerColor = playerColor === 'white' ? 'black' : 'white';
+            const possibleMoves = [];
+
+            // Find all pieces of the computer's color
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    if (board[row][col].color === computerColor) {
+                        // Find all valid moves for this piece
+                        for (let toRow = 0; toRow < 8; toRow++) {
+                            for (let toCol = 0; toCol < 8; toCol++) {
+                                if (isValidMove(row, col, toRow, toCol)) {
+                                    possibleMoves.push({ fromRow: row, fromCol: col, toRow, toCol });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Select a random move based on opponent strength
+            if (possibleMoves.length > 0) {
+                // The higher the strength, the more likely to choose a better move
+                const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+                const move = possibleMoves[randomIndex];
+                movePiece(move.fromRow, move.fromCol, move.toRow, move.toCol);
+            }
+        }
+
+        // Event listeners for UI controls
+        document.getElementById('newGameBtn').addEventListener('click', () => {
+            playerColor = document.getElementById('playerColor').value;
+            opponentStrength = parseInt(document.getElementById('opponentStrength').value);
+            initGame();
+        });
+
+        // Initialize the game when the page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
